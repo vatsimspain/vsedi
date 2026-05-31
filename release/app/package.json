@@ -1,12 +1,11 @@
 {
-  "name": "electron-react-boilerplate",
-  "version": "4.6.0",
-  "description": "A foundation for scalable desktop apps",
-  "license": "MIT",
+  "name": "vsedi-vatsimspain",
+  "version": "2.0.0",
+  "description": "Quickly install VATSIM Spain Sectors",
   "author": {
-    "name": "Electron React Boilerplate Maintainers",
-    "email": "electronreactboilerplate@gmail.com",
-    "url": "https://github.com/electron-react-boilerplate"
+    "name": "VATSIM Spain",
+    "email": "web@vatsimspain.es",
+    "url": "https://vatsimspain.es"
   },
   "main": "./dist/main/main.js",
   "scripts": {

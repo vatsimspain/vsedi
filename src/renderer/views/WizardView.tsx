@@ -113,7 +113,7 @@ export default function WizardView({ steps, currentStep, stepProps }: Props) {
           >
             VATSIM Spain 2026
           </a>{' '}
-          - Hecho con ❤️ por Unai G.
+          - Hecho con ❤️ por el dept. de Web
         </p>
         <div className="flex flex-row items-end gap-1">
           <a
