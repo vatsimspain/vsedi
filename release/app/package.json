@@ -7,6 +7,15 @@
     "email": "web@vatsimspain.es",
     "url": "https://vatsimspain.es"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vatsimspain/vsedi-releases.git"
+  },
+  "publish": {
+    "provider": "github",
+    "owner": "vatsimspain",
+    "repo": "vsedi-releases"
+  },
   "main": "./dist/main/main.js",
   "scripts": {
     "rebuild": "node -r ts-node/register ../../.erb/scripts/electron-rebuild.js",
