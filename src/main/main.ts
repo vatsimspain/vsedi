@@ -42,8 +42,7 @@ ipcMain.on('app:close', () => {
   mainWindow?.close();
 });
 
-const EUROSCOPE_PATH =
-  'C:\\Program Files (x86)\\EuroScope\\EuroScope.exe';
+const EUROSCOPE_PATH = 'C:\\Program Files (x86)\\EuroScope\\EuroScope.exe';
 
 ipcMain.handle('euroscope:exists', () => {
   return fs.existsSync(EUROSCOPE_PATH);
@@ -100,6 +99,9 @@ const createWindow = async () => {
   const getAssetPath = (...paths: string[]): string => {
     return path.join(RESOURCES_PATH, ...paths);
   };
+
+  const { updateElectronApp } = require('update-electron-app');
+  updateElectronApp();
 
   mainWindow = new BrowserWindow({
     show: false,
