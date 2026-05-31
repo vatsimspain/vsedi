@@ -217,8 +217,23 @@ export default function ConfigStepView({
         <button
           type="button"
           onClick={onBack}
-          className="px-5 py-2.5 text-slate-400 hover:text-slate-200 text-sm font-medium transition-colors"
+          className="flex items-center gap-2 px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-900 text-white text-sm font-medium rounded-lg transition-colors"
         >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            aria-hidden
+          >
+            <path
+              d="M13 8H3M7 12l-4-4 4-4"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
           Atrás
         </button>
         <button

@@ -9,6 +9,8 @@
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
 import path from 'path';
+import fs from 'fs';
+import { exec } from 'child_process';
 import { app, BrowserWindow, shell, ipcMain, dialog } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
@@ -38,6 +40,17 @@ ipcMain.handle('config:save', saveConfig);
 
 ipcMain.on('app:close', () => {
   mainWindow?.close();
+});
+
+const EUROSCOPE_PATH =
+  'C:\\Program Files (x86)\\EuroScope\\EuroScope.exe';
+
+ipcMain.handle('euroscope:exists', () => {
+  return fs.existsSync(EUROSCOPE_PATH);
+});
+
+ipcMain.on('euroscope:launch', () => {
+  exec(`"${EUROSCOPE_PATH}"`);
 });
 
 ipcMain.handle('dialog:openFolder', async () => {
@@ -94,6 +107,7 @@ const createWindow = async () => {
     height: 920,
     icon: getAssetPath('icon.png'),
     webPreferences: {
+      devTools: false,
       preload: app.isPackaged
         ? path.join(__dirname, 'preload.js')
         : path.join(__dirname, '../../.erb/dll/preload.js'),

@@ -10,6 +10,7 @@ const DEFAULT_FORM: WizardFormData = {
   fontSize: 'medium',
   sectorsFolder: '',
   overwriteSettings: false,
+  extras: [],
 };
 
 export function useWizardController(steps: WizardStep[]) {

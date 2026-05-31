@@ -3,17 +3,25 @@ import type {
   InstallPayload,
   InstallProgress,
   InstallStage,
+  ExtraInstallStatus,
 } from '../models/install.types';
 
 export type InstallStatus = 'idle' | InstallStage | 'error';
+export type ExtrasProgress = Record<string, ExtraInstallStatus>;
 
 interface InstallState {
   status: InstallStatus;
   progress: number;
   error: string | null;
+  extrasProgress: ExtrasProgress;
 }
 
-const IDLE: InstallState = { status: 'idle', progress: 0, error: null };
+const IDLE: InstallState = {
+  status: 'idle',
+  progress: 0,
+  error: null,
+  extrasProgress: {},
+};
 
 export function useInstallation() {
   const [state, setState] = useState<InstallState>(IDLE);
@@ -22,15 +30,22 @@ export function useInstallation() {
     const remove = window.electron.ipcRenderer.on(
       'install:progress',
       (...args: unknown[]) => {
-        const { stage, percent } = args[0] as InstallProgress;
-        setState((s) => ({ ...s, status: stage, progress: percent }));
+        const { stage, percent, extraId, extraStatus } =
+          args[0] as InstallProgress;
+        setState((s) => {
+          const next: InstallState = { ...s, status: stage, progress: percent };
+          if (stage === 'extras' && extraId && extraStatus) {
+            next.extrasProgress = { ...s.extrasProgress, [extraId]: extraStatus };
+          }
+          return next;
+        });
       },
     );
     return remove;
   }, []);
 
   const install = useCallback(async (payload: InstallPayload) => {
-    setState({ status: 'fetching', progress: 0, error: null });
+    setState({ status: 'fetching', progress: 0, error: null, extrasProgress: {} });
 
     const result = await window.electron.install.run(payload);
 

@@ -1,3 +1,4 @@
+import { ArrowRightIcon } from '../../icons/ArrowRight.icon';
 import type { StepProps } from '../../models/wizard.types';
 
 const MOCK_CHANGELOG = `
@@ -51,21 +52,7 @@ export default function ChangelogStepView({ onNext, onBack }: StepProps) {
           onClick={onBack}
           className="flex items-center gap-2 px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-900 text-white text-sm font-medium rounded-lg transition-colors"
         >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-            aria-hidden
-          >
-            <path
-              d="M13 8H3M7 12l-4-4 4-4"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <ArrowRightIcon className="rotate-180" />
           Atrás
         </button>
 
@@ -75,21 +62,7 @@ export default function ChangelogStepView({ onNext, onBack }: StepProps) {
           className="flex items-center gap-2 px-5 py-2.5 bg-zinc-700 hover:bg-zinc-600 active:bg-zinc-800 text-white text-sm font-medium rounded-lg transition-colors"
         >
           Continuar
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-            aria-hidden
-          >
-            <path
-              d="M3 8h10M9 4l4 4-4 4"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <ArrowRightIcon />
         </button>
       </div>
     </div>

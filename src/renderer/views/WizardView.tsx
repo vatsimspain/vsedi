@@ -104,12 +104,26 @@ export default function WizardView({ steps, currentStep, stepProps }: Props) {
           </a>
         </div>
         <p className="absolute -translate-x-1/2 left-1/2 text-slate-50">
-          © VATSIM Spain 2026 - Hecho con ❤️ por Unai G.
+          ©{' '}
+          <a
+            href="https://vatsimspain.es"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline"
+          >
+            VATSIM Spain 2026
+          </a>{' '}
+          - Hecho con ❤️ por Unai G.
         </p>
         <div className="flex flex-row items-end gap-1">
-          <p className="text-white underline">operaciones@vatsimspain.es</p>
+          <a
+            href="mailto:operaciones@vatsimspain.es"
+            className="text-white underline"
+          >
+            operaciones@vatsimspain.es
+          </a>
           <p className="text-white">|</p>
-          <p className="text-xs text-slate-400">v1.0</p>
+          <p className="text-xs text-slate-400">v2.0</p>
         </div>
       </div>
     </div>

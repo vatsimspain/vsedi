@@ -1,8 +1,13 @@
-export type InstallStage = 'fetching' | 'downloading' | 'extracting' | 'done';
+export type InstallStage = 'fetching' | 'downloading' | 'extracting' | 'extras' | 'done';
+
+export type ExtraInstallStatus = 'running' | 'done' | 'error';
 
 export interface InstallProgress {
   stage: InstallStage;
   percent: number;
+  extraId?: string;
+  extraStatus?: ExtraInstallStatus;
+  extraError?: string;
 }
 
 export interface InstallResult {
@@ -18,4 +23,5 @@ export interface InstallPayload {
   password: string;
   rank: string;
   hoppieCode: string;
+  extras: string[];
 }

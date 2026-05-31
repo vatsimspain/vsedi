@@ -6,6 +6,7 @@ export interface InstallPayload {
   password: string;
   rank: string;
   hoppieCode: string;
+  extras: string[];
 }
 
 export interface SavedConfig {
@@ -25,9 +26,14 @@ export interface InstallResult {
   error?: string;
 }
 
-export type InstallStage = 'fetching' | 'downloading' | 'extracting' | 'done';
+export type InstallStage = 'fetching' | 'downloading' | 'extracting' | 'extras' | 'done';
+
+export type ExtraInstallStatus = 'running' | 'done' | 'error';
 
 export interface InstallProgress {
   stage: InstallStage;
   percent: number;
+  extraId?: string;
+  extraStatus?: ExtraInstallStatus;
+  extraError?: string;
 }

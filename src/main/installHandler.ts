@@ -7,6 +7,7 @@ import { spawn } from 'child_process';
 import { app, IpcMainInvokeEvent } from 'electron';
 import type { InstallPayload, InstallProgress, InstallResult, SavedConfig } from './types/install.types';
 import { RATING_MAP } from '../const/ratingMap';
+import { EXTRAS } from '../const/extras.config';
 
 const GITHUB_API =
   'https://api.github.com/repos/vatsimspain/Operaciones/releases/tags/vsedi';
@@ -89,6 +90,46 @@ function downloadWithProgress(
         });
       })
       .on('error', reject);
+  });
+}
+
+function getAssetsPath(): string {
+  return app.isPackaged
+    ? path.join(process.resourcesPath, 'assets')
+    : path.join(__dirname, '../../assets');
+}
+
+function installFont(assetPath: string): Promise<void> {
+  const src = path.join(getAssetsPath(), assetPath);
+  const fontName = path.basename(assetPath, path.extname(assetPath));
+  const cmd = [
+    `$src = '${src.replace(/'/g, "''")}'`,
+    `$dst = "$env:LOCALAPPDATA\\Microsoft\\Windows\\Fonts\\${path.basename(assetPath)}"`,
+    `Copy-Item -LiteralPath $src -Destination $dst -Force`,
+    `$reg = 'HKCU:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts'`,
+    `New-ItemProperty -Path $reg -Name '${fontName} (TrueType)' -Value $dst -PropertyType String -Force | Out-Null`,
+  ].join('; ');
+
+  return new Promise((resolve, reject) => {
+    const ps = spawn('powershell', ['-NoProfile', '-NonInteractive', '-Command', cmd]);
+    let stderr = '';
+    ps.stderr.on('data', (d: Buffer) => { stderr += d.toString(); });
+    ps.on('close', (code) => {
+      if (code === 0) resolve();
+      else reject(new Error(stderr || `Font install exited with code ${code}`));
+    });
+    ps.on('error', reject);
+  });
+}
+
+function runSilentInstaller(exePath: string, args: string[]): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const proc = spawn(exePath, args, { detached: false });
+    proc.on('close', (code) => {
+      if (code === 0 || code === null) resolve();
+      else reject(new Error(`Installer exited with code ${code}`));
+    });
+    proc.on('error', reject);
   });
 }
 
@@ -226,6 +267,49 @@ export async function runInstall(
         writeConfig({ installedAiracs });
       } catch {
         // non-fatal: ignore AIRAC save error
+      }
+    }
+
+    // 7. Install selected extras (independently — failures don't abort the rest)
+    if (payload.extras.length > 0) {
+      send({ stage: 'extras', percent: 0 });
+      for (const extraId of payload.extras) {
+        const extraConfig = EXTRAS.find((e) => e.id === extraId);
+        if (!extraConfig) continue;
+
+        send({ stage: 'extras', percent: 0, extraId, extraStatus: 'running' });
+        try {
+          if (extraConfig.source === 'font') {
+            await installFont(extraConfig.assetPath);
+          } else if (extraConfig.source === 'local') {
+            await runSilentInstaller(extraConfig.localPath, extraConfig.installArgs);
+          } else {
+            let downloadUrl: string;
+            if (extraConfig.source === 'github') {
+              const apiUrl = extraConfig.releaseTag === 'latest'
+                ? `https://api.github.com/repos/${extraConfig.githubRepo}/releases/latest`
+                : `https://api.github.com/repos/${extraConfig.githubRepo}/releases/tags/${extraConfig.releaseTag}`;
+              const rawExtra = await get(apiUrl);
+              const releaseExtra = JSON.parse(rawExtra.toString()) as {
+                assets: { name: string; browser_download_url: string }[];
+              };
+              const extraAsset = releaseExtra.assets.find((a) =>
+                extraConfig.assetPattern.test(a.name),
+              );
+              if (!extraAsset) throw new Error(`Asset no encontrado para ${extraConfig.name}`);
+              downloadUrl = extraAsset.browser_download_url;
+            } else {
+              downloadUrl = extraConfig.downloadUrl;
+            }
+            const extraTmp = path.join(os.tmpdir(), `vsedi-extra-${extraConfig.id}.exe`);
+            await downloadWithProgress(downloadUrl, extraTmp, () => {});
+            await runSilentInstaller(extraTmp, extraConfig.installArgs);
+            try { fs.unlinkSync(extraTmp); } catch { /* ignore */ }
+          }
+          send({ stage: 'extras', percent: 100, extraId, extraStatus: 'done' });
+        } catch (extraErr) {
+          send({ stage: 'extras', percent: 0, extraId, extraStatus: 'error', extraError: (extraErr as Error).message });
+        }
       }
     }
 

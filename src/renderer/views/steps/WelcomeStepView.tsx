@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import StatusCard from '../../components/StatusCard/StatusCard.component';
 import type { StepProps } from '../../models/wizard.types';
+import { ArrowRightIcon } from '../../icons/ArrowRight.icon';
 
 const GITHUB_API =
   'https://api.github.com/repos/vatsimspain/Operaciones/releases/tags/vsedi';
@@ -161,21 +162,7 @@ export default function WelcomeStepView({ onNext }: StepProps) {
           className="flex items-center gap-2 px-5 py-2.5 bg-zinc-700 hover:bg-zinc-600 active:bg-zinc-800 text-white text-sm font-medium rounded-lg transition-colors"
         >
           Comenzar
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-            aria-hidden
-          >
-            <path
-              d="M3 8h10M9 4l4 4-4 4"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <ArrowRightIcon />
         </button>
       </div>
     </div>
