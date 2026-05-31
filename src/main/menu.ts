@@ -155,29 +155,53 @@ export default class MenuBuilder {
       label: 'Help',
       submenu: [
         {
-          label: 'Learn More',
+          label: 'Dashboard VATSIM Spain',
           click() {
-            shell.openExternal('https://electronjs.org');
+            shell.openExternal('https://dashboard.vatsimspain.es');
           },
         },
         {
-          label: 'Documentation',
+          label: 'Web VATSIM Spain',
           click() {
-            shell.openExternal(
-              'https://github.com/electron/electron/tree/main/docs#readme',
-            );
+            shell.openExternal('https://vatsimspain.es');
+          },
+        },
+        { type: 'separator' },
+        {
+          label: 'Discord',
+          click() {
+            shell.openExternal('https://dashboard.vatsimspain.es');
           },
         },
         {
-          label: 'Community Discussions',
+          label: 'Instagram',
           click() {
-            shell.openExternal('https://www.electronjs.org/community');
+            shell.openExternal('https://www.instagram.com/vatsimspain/');
           },
         },
         {
-          label: 'Search Issues',
+          label: 'YouTube',
           click() {
-            shell.openExternal('https://github.com/electron/electron/issues');
+            shell.openExternal('https://www.youtube.com/@vatsimspain');
+          },
+        },
+        {
+          label: 'X (Twitter)',
+          click() {
+            shell.openExternal('https://x.com/vatsimSpain');
+          },
+        },
+        {
+          label: 'TikTok',
+          click() {
+            shell.openExternal('https://www.tiktok.com/@vatsimspain');
+          },
+        },
+        { type: 'separator' },
+        {
+          label: 'Contacto: operaciones@vatsimspain.es',
+          click() {
+            shell.openExternal('mailto:operaciones@vatsimspain.es');
           },
         },
       ],
@@ -192,8 +216,8 @@ export default class MenuBuilder {
     return [subMenuAbout, subMenuEdit, subMenuView, subMenuWindow, subMenuHelp];
   }
 
-  buildDefaultTemplate() {
-    const templateDefault = [
+  buildDefaultTemplate(): MenuItemConstructorOptions[] {
+    const templateDefault: MenuItemConstructorOptions[] = [
       {
         label: '&File',
         submenu: [
@@ -256,29 +280,53 @@ export default class MenuBuilder {
         label: 'Help',
         submenu: [
           {
-            label: 'Learn More',
+            label: 'Dashboard VATSIM Spain',
             click() {
-              shell.openExternal('https://electronjs.org');
+              shell.openExternal('https://dashboard.vatsimspain.es');
             },
           },
           {
-            label: 'Documentation',
+            label: 'Web VATSIM Spain',
             click() {
-              shell.openExternal(
-                'https://github.com/electron/electron/tree/main/docs#readme',
-              );
+              shell.openExternal('https://vatsimspain.es');
+            },
+          },
+          { type: 'separator' },
+          {
+            label: 'Discord',
+            click() {
+              shell.openExternal('https://dashboard.vatsimspain.es');
             },
           },
           {
-            label: 'Community Discussions',
+            label: 'Instagram',
             click() {
-              shell.openExternal('https://www.electronjs.org/community');
+              shell.openExternal('https://www.instagram.com/vatsimspain/');
             },
           },
           {
-            label: 'Search Issues',
+            label: 'YouTube',
             click() {
-              shell.openExternal('https://github.com/electron/electron/issues');
+              shell.openExternal('https://www.youtube.com/@vatsimspain');
+            },
+          },
+          {
+            label: 'X (Twitter)',
+            click() {
+              shell.openExternal('https://x.com/vatsimSpain');
+            },
+          },
+          {
+            label: 'TikTok',
+            click() {
+              shell.openExternal('https://www.tiktok.com/@vatsimspain');
+            },
+          },
+          { type: 'separator' },
+          {
+            label: 'Contacto: operaciones@vatsimspain.es',
+            click() {
+              shell.openExternal('mailto:operaciones@vatsimspain.es');
             },
           },
         ],
