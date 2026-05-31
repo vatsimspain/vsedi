@@ -100,9 +100,6 @@ const createWindow = async () => {
     return path.join(RESOURCES_PATH, ...paths);
   };
 
-  const { updateElectronApp } = require('update-electron-app');
-  updateElectronApp();
-
   mainWindow = new BrowserWindow({
     show: false,
     width: 1024,

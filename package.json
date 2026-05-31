@@ -212,6 +212,11 @@
         }
       ]
     },
+    "publish": {
+      "provider": "github",
+      "owner": "vatsimspain",
+      "repo": "vsedi-releases"
+    },
     "win": {
       "target": [
         "nsis"
