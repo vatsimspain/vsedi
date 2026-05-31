@@ -8,14 +8,13 @@ const GITHUB_API =
 type AiracEntry = { fir: string; date: string; airacId: string };
 
 function dateStrToAiracId(raw: string): string {
-  // raw = "20260514" → "2605" using anchor 2025-01-23 = AIRAC 2501, 13 cycles/year
-  const anchor = new Date(2025, 0, 23).getTime();
+  const anchor = Date.UTC(2025, 0, 23);
   const cycleMs = 28 * 24 * 60 * 60 * 1000;
   const y = parseInt(raw.slice(0, 4), 10);
   const m = parseInt(raw.slice(4, 6), 10) - 1;
   const d = parseInt(raw.slice(6, 8), 10);
   const totalCycles = Math.floor(
-    (new Date(y, m, d).getTime() - anchor) / cycleMs,
+    (Date.UTC(y, m, d) - anchor) / cycleMs,
   );
   const yearOffset = Math.floor(totalCycles / 13);
   const cycleInYear = (totalCycles % 13) + 1;

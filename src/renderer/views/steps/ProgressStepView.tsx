@@ -26,7 +26,7 @@ function overallProgress(stage: Stage, dlPercent: number): number {
   return 0;
 }
 
-export default function ProgressStepView({ formData, onBack }: StepProps) {
+export default function ProgressStepView({ formData, onBack, onNext }: StepProps) {
   const { status, progress, error, install } = useInstallation();
   const done = status === 'done';
   const hasError = status === 'error';
@@ -163,6 +163,7 @@ export default function ProgressStepView({ formData, onBack }: StepProps) {
           {done && (
             <button
               type="button"
+              onClick={onNext}
               className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors"
             >
               Finalizar

@@ -36,6 +36,10 @@ ipcMain.handle('install:run', runInstall);
 ipcMain.handle('config:load', loadConfig);
 ipcMain.handle('config:save', saveConfig);
 
+ipcMain.on('app:close', () => {
+  mainWindow?.close();
+});
+
 ipcMain.handle('dialog:openFolder', async () => {
   if (!mainWindow) return null;
   const result = await dialog.showOpenDialog(mainWindow, {
@@ -87,7 +91,7 @@ const createWindow = async () => {
   mainWindow = new BrowserWindow({
     show: false,
     width: 1024,
-    height: 728,
+    height: 920,
     icon: getAssetPath('icon.png'),
     webPreferences: {
       preload: app.isPackaged

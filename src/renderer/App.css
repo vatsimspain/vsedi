@@ -36,9 +36,9 @@ html {
     width: var(--size);
     height: var(--size);
     margin: 0 auto;
-    background-color: #f72414;
+    background-color: #f5f5f5;
     border-radius: 50%;
-    box-shadow: 0 var(--shadow) #ffbeb8;
+    box-shadow: 0 var(--shadow) #cacaca;
     cursor: pointer;
     transition: 0.2s ease transform, 0.2s ease background-color,
       0.2s ease box-shadow;

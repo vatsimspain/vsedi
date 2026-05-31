@@ -36,6 +36,9 @@ const electronHandler = {
     save: (data: Record<string, unknown>): Promise<void> =>
       ipcRenderer.invoke('config:save', data),
   },
+  app: {
+    close: () => ipcRenderer.send('app:close'),
+  },
   getVersion: () => app.getVersion(),
 };
 
