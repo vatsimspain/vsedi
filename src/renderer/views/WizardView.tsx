@@ -21,6 +21,8 @@ type Props = {
 export default function WizardView({ steps, currentStep, stepProps }: Props) {
   const StepComponent = steps[currentStep].component;
 
+  const version = require('../../../package.json').version || 'Local';
+
   return (
     <div
       className="relative flex flex-col h-screen"
@@ -123,7 +125,9 @@ export default function WizardView({ steps, currentStep, stepProps }: Props) {
             operaciones@vatsimspain.es
           </a>
           <p className="text-white">|</p>
-          <p className="text-xs text-slate-400">v2.0</p>
+          <p className="text-xs text-slate-400">
+            v{version}
+          </p>
         </div>
       </div>
     </div>
