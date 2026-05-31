@@ -86,7 +86,7 @@ export default function WelcomeStepView({ onNext }: StepProps) {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold leading-tight font-akira text-slate-100">
+        <h1 className="text-2xl font-semibold leading-tight text-orange-500 font-akira">
           Bienvenido a VSEDI{name ? `, ${name}` : ''}
         </h1>
         <p className="mt-1 text-sm leading-relaxed text-slate-400">

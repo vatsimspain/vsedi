@@ -22,7 +22,25 @@ class AppUpdater {
   constructor() {
     log.transports.file.level = 'info';
     autoUpdater.logger = log;
-    autoUpdater.checkForUpdatesAndNotify();
+
+    autoUpdater.on('update-available', (info) => {
+      mainWindow?.webContents.send('update:available', info);
+    });
+
+    autoUpdater.on('download-progress', (progress) => {
+      mainWindow?.webContents.send('update:progress', progress);
+    });
+
+    autoUpdater.on('update-downloaded', (info) => {
+      mainWindow?.webContents.send('update:downloaded', info);
+    });
+
+    autoUpdater.on('error', (err) => {
+      log.error('Auto-updater error:', err);
+      mainWindow?.webContents.send('update:error', err.message);
+    });
+
+    autoUpdater.checkForUpdates();
   }
 }
 
@@ -40,6 +58,10 @@ ipcMain.handle('config:save', saveConfig);
 
 ipcMain.on('app:close', () => {
   mainWindow?.close();
+});
+
+ipcMain.on('update:install', () => {
+  autoUpdater.quitAndInstall();
 });
 
 const EUROSCOPE_PATH = 'C:\\Program Files (x86)\\EuroScope\\EuroScope.exe';

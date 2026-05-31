@@ -39,6 +39,17 @@ const electronHandler = {
   app: {
     close: () => ipcRenderer.send('app:close'),
   },
+  update: {
+    onAvailable: (func: (info: unknown) => void) =>
+      ipcRenderer.on('update:available', (_event, info) => func(info)),
+    onProgress: (func: (progress: unknown) => void) =>
+      ipcRenderer.on('update:progress', (_event, progress) => func(progress)),
+    onDownloaded: (func: (info: unknown) => void) =>
+      ipcRenderer.on('update:downloaded', (_event, info) => func(info)),
+    onError: (func: (message: string) => void) =>
+      ipcRenderer.on('update:error', (_event, message) => func(message)),
+    install: () => ipcRenderer.send('update:install'),
+  },
   euroscope: {
     exists: (): Promise<boolean> => ipcRenderer.invoke('euroscope:exists'),
     launch: () => ipcRenderer.send('euroscope:launch'),
