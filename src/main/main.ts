@@ -16,7 +16,7 @@ import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
-import { runInstall, loadConfig, saveConfig, get } from './installHandler';
+import { runInstall, loadConfig, saveConfig, get, scanInstalledAiracs } from './installHandler';
 
 class AppUpdater {
   constructor() {
@@ -55,6 +55,7 @@ ipcMain.on('ipc-example', async (event, arg) => {
 ipcMain.handle('install:run', runInstall);
 ipcMain.handle('config:load', loadConfig);
 ipcMain.handle('config:save', saveConfig);
+ipcMain.handle('airac:scan', scanInstalledAiracs);
 
 ipcMain.on('app:close', () => {
   mainWindow?.close();

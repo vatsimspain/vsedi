@@ -57,6 +57,10 @@ const electronHandler = {
   http: {
     getText: (url: string): Promise<string> => ipcRenderer.invoke('http:getText', url),
   },
+  airac: {
+    scan: (folder: string): Promise<Record<string, { date: string; cycle: string }[]>> =>
+      ipcRenderer.invoke('airac:scan', folder),
+  },
   getVersion: () => app.getVersion(),
 };
 

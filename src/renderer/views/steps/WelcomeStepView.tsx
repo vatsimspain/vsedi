@@ -6,30 +6,14 @@ import { ArrowRightIcon } from '../../icons/ArrowRight.icon';
 const GITHUB_API =
   'https://api.github.com/repos/vatsimspain/Operaciones/releases/tags/vsedi';
 
-type AiracEntry = { fir: string; date: string; airacId: string };
-
-function dateStrToAiracId(raw: string): string {
-  const anchor = Date.UTC(2025, 0, 23);
-  const cycleMs = 28 * 24 * 60 * 60 * 1000;
-  const y = parseInt(raw.slice(0, 4), 10);
-  const m = parseInt(raw.slice(4, 6), 10) - 1;
-  const d = parseInt(raw.slice(6, 8), 10);
-  const totalCycles = Math.floor(
-    (Date.UTC(y, m, d) - anchor) / cycleMs,
-  );
-  const yearOffset = Math.floor(totalCycles / 13);
-  const cycleInYear = (totalCycles % 13) + 1;
-  return `${25 + yearOffset}${String(cycleInYear).padStart(2, '0')}`;
-}
+type AiracEntry = { fir: string; date: string };
+type InstalledEntry = { date: string; cycle: string };
+type InstalledMap = Record<string, InstalledEntry[]>;
 
 function parseEntry(line: string): AiracEntry | null {
   const match = line.match(/^([^-]+)-AIRAC_(\d{8})$/);
   if (!match) return null;
-  return {
-    fir: match[1].trim(),
-    date: match[2],
-    airacId: dateStrToAiracId(match[2]),
-  };
+  return { fir: match[1].trim(), date: match[2] };
 }
 
 const FIR_PLACEHOLDERS = ['GCCC', 'LECB', 'LECM'];
@@ -37,24 +21,22 @@ const FIR_PLACEHOLDERS = ['GCCC', 'LECB', 'LECM'];
 export default function WelcomeStepView({ onNext }: StepProps) {
   const [githubAiracs, setGithubAiracs] = useState<AiracEntry[] | null>(null);
   const [airacError, setAiracError] = useState(false);
-  const [installedAiracs, setInstalledAiracs] = useState<
-    Record<string, string>
-  >({});
+  const [installedAiracs, setInstalledAiracs] = useState<InstalledMap>({});
   const [sectorsFolder, setSectorsFolder] = useState<string | null>(null);
   const [name, setName] = useState<string | null>(null);
 
   useEffect(() => {
     window.electron.config
       .load()
-      .then((cfg) => {
-        const c = cfg as {
-          installedAiracs?: Record<string, string>;
-          sectorsFolder?: string;
-          name?: string;
-        };
-        setInstalledAiracs(c.installedAiracs ?? {});
-        setSectorsFolder(c.sectorsFolder ?? null);
+      .then(async (cfg) => {
+        const c = cfg as { sectorsFolder?: string; name?: string };
         setName(c.name ?? null);
+        const folder = c.sectorsFolder ?? null;
+        setSectorsFolder(folder);
+        if (folder) {
+          const scanned = await window.electron.airac.scan(folder);
+          setInstalledAiracs(scanned);
+        }
       })
       .catch(() => {});
   }, []);
@@ -111,31 +93,29 @@ export default function WelcomeStepView({ onNext }: StepProps) {
               ))
             : airacError
               ? FIR_PLACEHOLDERS.map((fir) => {
-                  const installedDate = installedAiracs[fir];
-                  return installedDate ? (
+                  const entries = installedAiracs[fir];
+                  const latest = entries?.[entries.length - 1];
+                  return (
                     <StatusCard
                       key={fir}
                       label={fir}
-                      value={`AIRAC ${dateStrToAiracId(installedDate)}`}
-                      ok={true}
-                    />
-                  ) : (
-                    <StatusCard
-                      key={fir}
-                      label={fir}
-                      value="Sin datos"
-                      ok={false}
+                      value={latest ? `AIRAC ${latest.cycle}` : 'Sin datos'}
+                      ok={!!latest}
                     />
                   );
                 })
-              : githubAiracs!.map((entry) => (
-                  <StatusCard
-                    key={entry.fir}
-                    label={entry.fir}
-                    value={`AIRAC ${entry.airacId}`}
-                    ok={installedAiracs[entry.fir] === entry.date}
-                  />
-                ))}
+              : githubAiracs!.map((entry) => {
+                  const matched = installedAiracs[entry.fir]?.find((e) => e.date === entry.date);
+                  return (
+                    <StatusCard
+                      key={entry.fir}
+                      label={entry.fir}
+                      value={matched ? `AIRAC ${matched.cycle}` : `-`}
+                      ok={!!matched}
+                    />
+                  );
+                })}
+
         </div>
       </div>
 

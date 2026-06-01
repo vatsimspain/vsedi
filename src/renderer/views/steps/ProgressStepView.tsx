@@ -57,6 +57,7 @@ export default function ProgressStepView({
       password: formData.password,
       rank: formData.rank,
       hoppieCode: formData.hoppieCode,
+      fontSize: formData.fontSize,
       extras: formData.extras,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps

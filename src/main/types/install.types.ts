@@ -6,6 +6,7 @@ export interface InstallPayload {
   password: string;
   rank: string;
   hoppieCode: string;
+  fontSize: 'small' | 'medium' | 'large';
   extras: string[];
 }
 
@@ -18,7 +19,6 @@ export interface SavedConfig {
   fontSize?: 'small' | 'medium' | 'large';
   sectorsFolder?: string;
   overwriteSettings?: boolean;
-  installedAiracs?: Record<string, string>;
 }
 
 export interface InstallResult {

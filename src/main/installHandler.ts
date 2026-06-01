@@ -1,13 +1,18 @@
-import https from 'https';
-import http from 'http';
-import fs from 'fs';
-import path from 'path';
-import os from 'os';
 import { spawn } from 'child_process';
 import { app, IpcMainInvokeEvent } from 'electron';
-import type { InstallPayload, InstallProgress, InstallResult, SavedConfig } from './types/install.types';
-import { RATING_MAP } from '../const/ratingMap';
+import fs from 'fs';
+import http from 'http';
+import https from 'https';
+import os from 'os';
+import path from 'path';
 import { EXTRAS } from '../const/extras.config';
+import { RATING_MAP } from '../const/ratingMap';
+import type {
+  InstallPayload,
+  InstallProgress,
+  InstallResult,
+  SavedConfig,
+} from './types/install.types';
 
 const GITHUB_API =
   'https://api.github.com/repos/vatsimspain/Operaciones/releases/tags/vsedi';
@@ -25,34 +30,43 @@ function readConfig(): SavedConfig {
 }
 
 function writeConfig(data: Partial<SavedConfig>): void {
-  fs.writeFileSync(getConfigPath(), JSON.stringify({ ...readConfig(), ...data }, null, 2), 'utf8');
+  fs.writeFileSync(
+    getConfigPath(),
+    JSON.stringify({ ...readConfig(), ...data }, null, 2),
+    'utf8',
+  );
 }
 
 export function loadConfig(_event: IpcMainInvokeEvent): SavedConfig {
   return readConfig();
 }
 
-export function saveConfig(_event: IpcMainInvokeEvent, data: SavedConfig): void {
+export function saveConfig(
+  _event: IpcMainInvokeEvent,
+  data: SavedConfig,
+): void {
   writeConfig(data);
 }
 
 export function get(url: string): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const mod = url.startsWith('https') ? https : http;
-    mod.get(url, { headers: { 'User-Agent': 'vsedi-installer' } }, (res) => {
-      if (
-        res.statusCode &&
-        res.statusCode >= 300 &&
-        res.statusCode < 400 &&
-        res.headers.location
-      ) {
-        return resolve(get(res.headers.location));
-      }
-      const chunks: Buffer[] = [];
-      res.on('data', (c: Buffer) => chunks.push(c));
-      res.on('end', () => resolve(Buffer.concat(chunks)));
-      res.on('error', reject);
-    }).on('error', reject);
+    mod
+      .get(url, { headers: { 'User-Agent': 'vsedi-installer' } }, (res) => {
+        if (
+          res.statusCode &&
+          res.statusCode >= 300 &&
+          res.statusCode < 400 &&
+          res.headers.location
+        ) {
+          return resolve(get(res.headers.location));
+        }
+        const chunks: Buffer[] = [];
+        res.on('data', (c: Buffer) => chunks.push(c));
+        res.on('end', () => resolve(Buffer.concat(chunks)));
+        res.on('error', reject);
+      })
+      .on('error', reject);
   });
 }
 
@@ -111,9 +125,16 @@ function installFont(assetPath: string): Promise<void> {
   ].join('; ');
 
   return new Promise((resolve, reject) => {
-    const ps = spawn('powershell', ['-NoProfile', '-NonInteractive', '-Command', cmd]);
+    const ps = spawn('powershell', [
+      '-NoProfile',
+      '-NonInteractive',
+      '-Command',
+      cmd,
+    ]);
     let stderr = '';
-    ps.stderr.on('data', (d: Buffer) => { stderr += d.toString(); });
+    ps.stderr.on('data', (d: Buffer) => {
+      stderr += d.toString();
+    });
     ps.on('close', (code) => {
       if (code === 0) resolve();
       else reject(new Error(stderr || `Font install exited with code ${code}`));
@@ -146,7 +167,12 @@ function extractZip(zipPath: string, destPath: string): Promise<void> {
       `Remove-Item -LiteralPath $tmp -Recurse -Force`,
     ].join('; ');
 
-    const ps = spawn('powershell', ['-NoProfile', '-NonInteractive', '-Command', cmd]);
+    const ps = spawn('powershell', [
+      '-NoProfile',
+      '-NonInteractive',
+      '-Command',
+      cmd,
+    ]);
     let stderr = '';
     ps.stderr.on('data', (d: Buffer) => {
       stderr += d.toString();
@@ -157,6 +183,61 @@ function extractZip(zipPath: string, destPath: string): Promise<void> {
     });
     ps.on('error', reject);
   });
+}
+
+const FONT_SIZE_VALUES: Record<'small' | 'medium' | 'large', string> = {
+  small: '3.0',
+  medium: '3.5',
+  large: '4.0',
+};
+
+const SYMBOLOGY_FONT_ENTRIES = [
+  'Metar:normal',
+  'Metar:modified',
+  'Metar:timeout',
+  'Other:list header',
+  'Chat:text',
+  'Chat:name normal',
+  'Chat:name unread',
+];
+
+function findSymbologyFiles(dir: string): string[] {
+  const results: string[] = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) results.push(...findSymbologyFiles(full));
+    else if (entry.name === 'SYMBOLOGY.txt') results.push(full);
+  }
+  return results;
+}
+
+function patchSymbologyFontSize(
+  folder: string,
+  fontSize: 'small' | 'medium' | 'large',
+): void {
+  const sizeValue = FONT_SIZE_VALUES[fontSize];
+  if (!sizeValue) return;
+  const targetEntries = new Set(SYMBOLOGY_FONT_ENTRIES);
+  for (const filePath of findSymbologyFiles(folder)) {
+    const content = fs.readFileSync(filePath, 'utf8');
+    const lineEnding = content.includes('\r\n') ? '\r\n' : '\n';
+    const lines = content.split(/\r?\n/);
+    let changed = false;
+
+    const updatedLines = lines.map((line) => {
+      const parts = line.split(':');
+      if (parts.length < 4) return line;
+      const key = `${parts[0]}:${parts[1]}`;
+      if (!targetEntries.has(key)) return line;
+      if (parts[3] === sizeValue) return line;
+      parts[3] = sizeValue;
+      changed = true;
+      return parts.join(':');
+    });
+
+    if (changed)
+      fs.writeFileSync(filePath, updatedLines.join(lineEnding), 'utf8');
+  }
 }
 
 function findPrfFiles(dir: string): string[] {
@@ -175,7 +256,7 @@ function patchPrfFiles(
   cid: string,
   password: string,
   rank: string,
-  hoppieCode: string
+  hoppieCode: string,
 ): void {
   const rating = RATING_MAP[rank] ?? 1;
   const injected = [
@@ -204,15 +285,69 @@ function createHoppieFiles(folder: string, hoppieCode: string): void {
   for (const sector of HOPPIE_SECTORS) {
     const dir = path.join(folder, sector, 'Plugins', 'TopSky');
     fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(path.join(dir, 'TopSkyCPDLChoppieCode.txt'), hoppieCode, 'utf8');
+    fs.writeFileSync(
+      path.join(dir, 'TopSkyCPDLChoppieCode.txt'),
+      hoppieCode,
+      'utf8',
+    );
   }
+}
+
+type AiracFileEntry = { date: string; cycle: string };
+
+function scanAiracsInDir(
+  dir: string,
+  result: Record<string, AiracFileEntry[]>,
+): void {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      scanAiracsInDir(full, result);
+    } else {
+      const ext = entry.name.split('.').pop()?.toLowerCase();
+      if (ext !== 'sct' && ext !== 'ese') continue;
+      const dateMatch = entry.name.match(/([A-Z]+)-AIRAC_(\d{8})/i);
+      if (!dateMatch) continue;
+      const fir = dateMatch[1].toUpperCase();
+      const date = dateMatch[2];
+      // Extract AIRAC cycle from filename segment like "-260501-": first 4 chars = cycle (e.g. "2605")
+      const cycleMatch = entry.name.match(/AIRAC_\d{14}-(\d{4})\d{2}-/);
+      const cycle = cycleMatch ? cycleMatch[1] : '';
+      if (!result[fir]) result[fir] = [];
+      if (!result[fir].some((e) => e.date === date))
+        result[fir].push({ date, cycle });
+    }
+  }
+}
+
+export function scanInstalledAiracs(
+  _event: IpcMainInvokeEvent,
+  sectorsFolder: string,
+): Record<string, AiracFileEntry[]> {
+  const result: Record<string, AiracFileEntry[]> = {};
+  try {
+    if (sectorsFolder && fs.existsSync(sectorsFolder))
+      scanAiracsInDir(sectorsFolder, result);
+  } catch {
+    /* ignore */
+  }
+  return result;
 }
 
 export async function runInstall(
   event: IpcMainInvokeEvent,
   payload: InstallPayload,
 ): Promise<InstallResult> {
-  const { overwriteSettings, destFolder, name, cid, password, rank, hoppieCode } = payload;
+  const {
+    overwriteSettings,
+    destFolder,
+    name,
+    cid,
+    password,
+    rank,
+    hoppieCode,
+    fontSize,
+  } = payload;
   const send = (progress: InstallProgress) =>
     event.sender.send('install:progress', progress);
 
@@ -229,10 +364,12 @@ export async function runInstall(
       assets: { name: string; browser_download_url: string }[];
     };
 
-    const assetName = overwriteSettings ? 'data_install.zip' : 'data_update.zip';
+    const assetName = overwriteSettings
+      ? 'data_install.zip'
+      : 'data_update.zip';
     const asset = release.assets.find((a) => a.name === assetName);
-    if (!asset) throw new Error(`No se encontró el asset "${assetName}" en el release.`);
-    const airacAsset = release.assets.find((a) => a.name === 'airacData.txt');
+    if (!asset)
+      throw new Error(`No se encontró el asset "${assetName}" en el release.`);
 
     // 2. Download
     send({ stage: 'downloading', percent: 0 });
@@ -247,6 +384,7 @@ export async function runInstall(
     // 4. Patch .prf files with user credentials
     patchPrfFiles(destFolder, name, cid, password, rank, hoppieCode);
     createHoppieFiles(destFolder, hoppieCode);
+    patchSymbologyFontSize(destFolder, fontSize);
 
     // 5. Cleanup
     try {
@@ -255,20 +393,17 @@ export async function runInstall(
       // ignore cleanup errors
     }
 
-    // 6. Save installed AIRACs to config
-    if (airacAsset) {
-      try {
-        const airacText = (await get(airacAsset.browser_download_url)).toString('utf8');
-        const installedAiracs: Record<string, string> = {};
-        for (const line of airacText.split(/\r?\n/).filter(Boolean)) {
-          const match = line.match(/^([^-]+)-AIRAC_(\d{8})$/);
-          if (match) installedAiracs[match[1].trim()] = match[2];
-        }
-        writeConfig({ installedAiracs });
-      } catch {
-        // non-fatal: ignore AIRAC save error
-      }
-    }
+    // 6. Save user config
+    writeConfig({
+      name,
+      cid,
+      password,
+      rank,
+      hoppieCode,
+      fontSize,
+      sectorsFolder: destFolder,
+      overwriteSettings,
+    });
 
     // 7. Install selected extras (independently — failures don't abort the rest)
     if (payload.extras.length > 0) {
@@ -282,38 +417,77 @@ export async function runInstall(
           if (extraConfig.source === 'font') {
             await installFont(extraConfig.assetPath);
           } else if (extraConfig.source === 'local') {
-            await runSilentInstaller(extraConfig.localPath, extraConfig.installArgs);
+            await runSilentInstaller(
+              extraConfig.localPath,
+              extraConfig.installArgs,
+            );
           } else {
             let downloadUrl: string;
             if (extraConfig.source === 'github') {
-              let releaseExtra: { assets: { name: string; browser_download_url: string }[]; prerelease?: boolean };
+              let releaseExtra: {
+                assets: { name: string; browser_download_url: string }[];
+                prerelease?: boolean;
+              };
               if (extraConfig.releaseTag === 'latest') {
-                const rawReleases = await get(`https://api.github.com/repos/${extraConfig.githubRepo}/releases`);
-                const releases = JSON.parse(rawReleases.toString()) as { tag_name: string; prerelease: boolean; draft: boolean; assets: { name: string; browser_download_url: string }[] }[];
+                const rawReleases = await get(
+                  `https://api.github.com/repos/${extraConfig.githubRepo}/releases`,
+                );
+                const releases = JSON.parse(rawReleases.toString()) as {
+                  tag_name: string;
+                  prerelease: boolean;
+                  draft: boolean;
+                  assets: { name: string; browser_download_url: string }[];
+                }[];
                 const unstablePattern = /beta|alpha|rc|pre|dev/i;
-                const stable = releases.find((r) => !r.prerelease && !r.draft && !unstablePattern.test(r.tag_name));
-                if (!stable) throw new Error(`No se encontró versión estable para ${extraConfig.name}`);
+                const stable = releases.find(
+                  (r) =>
+                    !r.prerelease &&
+                    !r.draft &&
+                    !unstablePattern.test(r.tag_name),
+                );
+                if (!stable)
+                  throw new Error(
+                    `No se encontró versión estable para ${extraConfig.name}`,
+                  );
                 releaseExtra = stable;
               } else {
-                const rawExtra = await get(`https://api.github.com/repos/${extraConfig.githubRepo}/releases/tags/${extraConfig.releaseTag}`);
-                releaseExtra = JSON.parse(rawExtra.toString()) as { assets: { name: string; browser_download_url: string }[] };
+                const rawExtra = await get(
+                  `https://api.github.com/repos/${extraConfig.githubRepo}/releases/tags/${extraConfig.releaseTag}`,
+                );
+                releaseExtra = JSON.parse(rawExtra.toString()) as {
+                  assets: { name: string; browser_download_url: string }[];
+                };
               }
               const extraAsset = releaseExtra.assets.find((a) =>
                 extraConfig.assetPattern.test(a.name),
               );
-              if (!extraAsset) throw new Error(`Asset no encontrado para ${extraConfig.name}`);
+              if (!extraAsset)
+                throw new Error(`Asset no encontrado para ${extraConfig.name}`);
               downloadUrl = extraAsset.browser_download_url;
             } else {
               downloadUrl = extraConfig.downloadUrl;
             }
-            const extraTmp = path.join(os.tmpdir(), `vsedi-extra-${extraConfig.id}.exe`);
+            const extraTmp = path.join(
+              os.tmpdir(),
+              `vsedi-extra-${extraConfig.id}.exe`,
+            );
             await downloadWithProgress(downloadUrl, extraTmp, () => {});
             await runSilentInstaller(extraTmp, extraConfig.installArgs);
-            try { fs.unlinkSync(extraTmp); } catch { /* ignore */ }
+            try {
+              fs.unlinkSync(extraTmp);
+            } catch {
+              /* ignore */
+            }
           }
           send({ stage: 'extras', percent: 100, extraId, extraStatus: 'done' });
         } catch (extraErr) {
-          send({ stage: 'extras', percent: 0, extraId, extraStatus: 'error', extraError: (extraErr as Error).message });
+          send({
+            stage: 'extras',
+            percent: 0,
+            extraId,
+            extraStatus: 'error',
+            extraError: (extraErr as Error).message,
+          });
         }
       }
     }

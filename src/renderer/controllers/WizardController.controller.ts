@@ -40,8 +40,8 @@ export function useWizardController(steps: WizardStep[]) {
   const goNext = () => {
     setCurrentStep((s) => {
       const next = Math.min(s + 1, steps.length - 1);
-      // Save form data when advancing from the config step (index 1)
-      if (s === 1) {
+      // Save form data when leaving the config step (index 2)
+      if (s === 2) {
         window.electron.config.save(formData as unknown as Record<string, unknown>).catch(() => {});
       }
       return next;

@@ -23,5 +23,6 @@ export interface InstallPayload {
   password: string;
   rank: string;
   hoppieCode: string;
+  fontSize: 'small' | 'medium' | 'large';
   extras: string[];
 }
