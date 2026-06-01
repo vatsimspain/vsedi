@@ -16,7 +16,7 @@ import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
-import { runInstall, loadConfig, saveConfig } from './installHandler';
+import { runInstall, loadConfig, saveConfig, get } from './installHandler';
 
 class AppUpdater {
   constructor() {
@@ -74,6 +74,11 @@ ipcMain.on('euroscope:launch', () => {
   exec(`"${EUROSCOPE_PATH}"`);
 });
 
+ipcMain.handle('http:getText', async (_event, url: string) => {
+  const buf = await get(url);
+  return buf.toString('utf-8');
+});
+
 ipcMain.handle('dialog:openFolder', async () => {
   if (!mainWindow) return null;
   const result = await dialog.showOpenDialog(mainWindow, {
@@ -128,7 +133,6 @@ const createWindow = async () => {
     height: 920,
     icon: getAssetPath('icon.png'),
     webPreferences: {
-      devTools: false,
       preload: app.isPackaged
         ? path.join(__dirname, 'preload.js')
         : path.join(__dirname, '../../.erb/dll/preload.js'),

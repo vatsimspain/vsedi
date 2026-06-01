@@ -1,5 +1,0 @@
-178.62.56.106 AUTOMATIC
-sweatbox.vatsim.net SweatBox
-sweatbox-2.vatsim.net SweatBox-2
-localhost localhost
-loopback loopback

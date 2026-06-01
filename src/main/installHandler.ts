@@ -36,7 +36,7 @@ export function saveConfig(_event: IpcMainInvokeEvent, data: SavedConfig): void 
   writeConfig(data);
 }
 
-function get(url: string): Promise<Buffer> {
+export function get(url: string): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const mod = url.startsWith('https') ? https : http;
     mod.get(url, { headers: { 'User-Agent': 'vsedi-installer' } }, (res) => {
@@ -286,13 +286,18 @@ export async function runInstall(
           } else {
             let downloadUrl: string;
             if (extraConfig.source === 'github') {
-              const apiUrl = extraConfig.releaseTag === 'latest'
-                ? `https://api.github.com/repos/${extraConfig.githubRepo}/releases/latest`
-                : `https://api.github.com/repos/${extraConfig.githubRepo}/releases/tags/${extraConfig.releaseTag}`;
-              const rawExtra = await get(apiUrl);
-              const releaseExtra = JSON.parse(rawExtra.toString()) as {
-                assets: { name: string; browser_download_url: string }[];
-              };
+              let releaseExtra: { assets: { name: string; browser_download_url: string }[]; prerelease?: boolean };
+              if (extraConfig.releaseTag === 'latest') {
+                const rawReleases = await get(`https://api.github.com/repos/${extraConfig.githubRepo}/releases`);
+                const releases = JSON.parse(rawReleases.toString()) as { tag_name: string; prerelease: boolean; draft: boolean; assets: { name: string; browser_download_url: string }[] }[];
+                const unstablePattern = /beta|alpha|rc|pre|dev/i;
+                const stable = releases.find((r) => !r.prerelease && !r.draft && !unstablePattern.test(r.tag_name));
+                if (!stable) throw new Error(`No se encontró versión estable para ${extraConfig.name}`);
+                releaseExtra = stable;
+              } else {
+                const rawExtra = await get(`https://api.github.com/repos/${extraConfig.githubRepo}/releases/tags/${extraConfig.releaseTag}`);
+                releaseExtra = JSON.parse(rawExtra.toString()) as { assets: { name: string; browser_download_url: string }[] };
+              }
               const extraAsset = releaseExtra.assets.find((a) =>
                 extraConfig.assetPattern.test(a.name),
               );

@@ -62,15 +62,13 @@ export default function WelcomeStepView({ onNext }: StepProps) {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(GITHUB_API, {
-          headers: { 'User-Agent': 'vsedi-installer' },
-        });
-        const release = (await res.json()) as {
+        const raw = await window.electron.http.getText(GITHUB_API);
+        const release = JSON.parse(raw) as {
           assets: { name: string; browser_download_url: string }[];
         };
         const asset = release.assets.find((a) => a.name === 'airacData.txt');
         if (!asset) throw new Error('airacData.txt no encontrado');
-        const text = await (await fetch(asset.browser_download_url)).text();
+        const text = await window.electron.http.getText(asset.browser_download_url);
         const entries = text
           .split(/\r?\n/)
           .filter(Boolean)
@@ -86,7 +84,7 @@ export default function WelcomeStepView({ onNext }: StepProps) {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold leading-tight text-orange-500 font-akira">
+        <h1 className="text-2xl font-semibold leading-tight text-white font-akira">
           Bienvenido a VSEDI{name ? `, ${name}` : ''}
         </h1>
         <p className="mt-1 text-sm leading-relaxed text-slate-400">

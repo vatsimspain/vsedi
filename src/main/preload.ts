@@ -54,6 +54,9 @@ const electronHandler = {
     exists: (): Promise<boolean> => ipcRenderer.invoke('euroscope:exists'),
     launch: () => ipcRenderer.send('euroscope:launch'),
   },
+  http: {
+    getText: (url: string): Promise<string> => ipcRenderer.invoke('http:getText', url),
+  },
   getVersion: () => app.getVersion(),
 };
 
