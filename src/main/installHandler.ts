@@ -206,7 +206,7 @@ function findSymbologyFiles(dir: string): string[] {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) results.push(...findSymbologyFiles(full));
-    else if (entry.name === 'SYMBOLOGY.txt') results.push(full);
+    else if (entry.name === 'SIMBOLOGY.txt') results.push(full);
   }
   return results;
 }
