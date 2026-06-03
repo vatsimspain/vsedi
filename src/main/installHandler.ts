@@ -142,7 +142,8 @@ function runPowerShell(cmd: string, elevated = false): Promise<void> {
       ps.on('close', (code) => {
         cleanup();
         if (code === 0) resolve();
-        else reject(new Error(`PowerShell (elevated) exited with code ${code}`));
+        else
+          reject(new Error(`PowerShell (elevated) exited with code ${code}`));
       });
       ps.on('error', (err) => {
         cleanup();
@@ -499,7 +500,7 @@ export async function runInstall(
       overwriteSettings,
     });
 
-    // 7. Install selected extras (independently — failures don't abort the rest)
+    // 7. Install selected extras (independently, failures don't abort the rest)
     if (payload.extras.length > 0) {
       send({ stage: 'extras', percent: 0 });
       for (const extraId of payload.extras) {

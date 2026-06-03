@@ -1,4 +1,4 @@
-# VSEDI — VATSIM Spain
+# VSEDI, VATSIM Spain
 
 Install and configure EuroScope sectors for VATSIM Spain in seconds.
 
@@ -6,16 +6,16 @@ Install and configure EuroScope sectors for VATSIM Spain in seconds.
 
 ---
 
-VSEDI is a desktop application for VATSIM Spain controllers that fully automates the installation and configuration of EuroScope: AIRAC sectors, network credentials, additional plugins, and font settings — all through a guided step-by-step wizard.
+VSEDI is a desktop application for VATSIM Spain controllers that fully automates the installation and configuration of EuroScope: AIRAC sectors, network credentials, additional plugins, and font settings, all through a guided step-by-step wizard.
 
 ## Features
 
-- **One-click sector installation** — automatically downloads and installs AIRACs for the Spanish FIRs (GCCC, LECB, LECM).
-- **Live AIRAC status** — the welcome screen shows which AIRAC cycle is installed for each FIR and whether it matches the latest version published on GitHub.
-- **EuroScope detection and installation** — detects whether EuroScope is installed and, if not, lets you install it directly from the wizard (recommended version 3.2.3.2 or the latest available).
-- **Automatic credential setup** — enter your CID, password, network name, and Hoppie code once; VSEDI writes the configuration into your EuroScope files.
-- **Optional extras** — install additional plugins and tools alongside the sectors with a single click.
-- **Auto-updates** — the app checks for new versions on startup and displays a banner when one is available.
+- **One-click sector installation**, automatically downloads and installs AIRACs for the Spanish FIRs (GCCC, LECB, LECM).
+- **Live AIRAC status**, the welcome screen shows which AIRAC cycle is installed for each FIR and whether it matches the latest version published on GitHub.
+- **EuroScope detection and installation**, detects whether EuroScope is installed and, if not, lets you install it directly from the wizard (recommended version 3.2.3.2 or the latest available).
+- **Automatic credential setup**, enter your CID, password, network name, and Hoppie code once; VSEDI writes the configuration into your EuroScope files.
+- **Optional extras**, install additional plugins and tools alongside the sectors with a single click.
+- **Auto-updates**, the app checks for new versions on startup and displays a banner when one is available.
 - **Windows 10 and 11 compatible (maybe soon Linux too!)**.
 
 ## Wizard Steps
@@ -56,9 +56,9 @@ Displays the release notes for the current sector version.
 
 1. Download and install VSEDI from the [releases page](https://github.com/vatsimspain/vsedi/releases).
 2. Open the app and follow the wizard:
-   - **EuroScope** — VSEDI will detect it automatically. If it is not installed, install it from this step.
-   - **Configuration** — enter your VATSIM credentials and select your EuroScope sectors folder.
-   - **Extras** — choose any additional plugins you want to install (optional).
+   - **EuroScope**, VSEDI will detect it automatically. If it is not installed, install it from this step.
+   - **Configuration**, enter your VATSIM credentials and select your EuroScope sectors folder.
+   - **Extras**, choose any additional plugins you want to install (optional).
 3. Click **Install** on the progress step and wait for it to finish.
 
 > Your configuration is saved between sessions. The next time you open VSEDI your data will already be loaded.

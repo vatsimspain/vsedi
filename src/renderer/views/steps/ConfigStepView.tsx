@@ -1,19 +1,18 @@
 import { useConfigController } from '../../controllers/ConfigController.controller';
 import type { StepProps } from '../../models/wizard.types';
-import EuroscopeLogo from '../../../../assets/logo/euroscope.png';
 
 const RANKS = [
   { value: '', label: 'Selecciona tu rango...' },
-  { value: 'OBS', label: 'OBS — Observador' },
-  { value: 'S1', label: 'S1 — Estudiante 1' },
-  { value: 'S2', label: 'S2 — Estudiante 2' },
-  { value: 'S3', label: 'S3 — Estudiante 3' },
-  { value: 'C1', label: 'C1 — Controlador 1' },
-  { value: 'C3', label: 'C3 — Controlador 3' },
-  { value: 'I1', label: 'I1 — Instructor 1' },
-  { value: 'I3', label: 'I3 — Instructor 3' },
-  { value: 'SUP', label: 'SUP — Supervisor' },
-  { value: 'ADM', label: 'ADM — Administrador' },
+  { value: 'OBS', label: 'OBS, Observador' },
+  { value: 'S1', label: 'S1, Estudiante 1' },
+  { value: 'S2', label: 'S2, Estudiante 2' },
+  { value: 'S3', label: 'S3, Estudiante 3' },
+  { value: 'C1', label: 'C1, Controlador 1' },
+  { value: 'C3', label: 'C3, Controlador 3' },
+  { value: 'I1', label: 'I1, Instructor 1' },
+  { value: 'I3', label: 'I3, Instructor 3' },
+  { value: 'SUP', label: 'SUP, Supervisor' },
+  { value: 'ADM', label: 'ADM, Administrador' },
 ];
 
 const FONT_SIZES = [
@@ -35,8 +34,6 @@ export default function ConfigStepView({
   onBack,
 }: StepProps) {
   const { pickSectorsFolder } = useConfigController(setFormData);
-
-
 
   return (
     <div className="flex flex-col gap-6">

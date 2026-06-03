@@ -46,7 +46,7 @@ export default function UpdateBanner() {
         {state === 'available' &&
           `Descargando actualización${version ? ` v${version}` : ''}... ${percent > 0 ? `${percent}%` : ''}`}
         {state === 'downloaded' &&
-          `Actualización lista${version ? ` (v${version})` : ''} — reinicia para aplicarla`}
+          `Actualización lista${version ? ` (v${version})` : ''}, reinicia para aplicarla`}
         {state === 'error' && `Error en la actualización: ${errorMsg}`}
       </span>
       {state === 'downloaded' && (
