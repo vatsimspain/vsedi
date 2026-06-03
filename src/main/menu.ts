@@ -43,7 +43,7 @@ export default class MenuBuilder {
 
       Menu.buildFromTemplate([
         {
-          label: 'Inspect element',
+          label: 'Inspeccionar elemento',
           click: () => {
             this.mainWindow.webContents.inspectElement(x, y);
           },
@@ -57,26 +57,26 @@ export default class MenuBuilder {
       label: 'Electron',
       submenu: [
         {
-          label: 'About ElectronReact',
+          label: 'Acerca de',
           selector: 'orderFrontStandardAboutPanel:',
         },
         { type: 'separator' },
-        { label: 'Services', submenu: [] },
+        { label: 'Servicios', submenu: [] },
         { type: 'separator' },
         {
-          label: 'Hide ElectronReact',
+          label: 'Ocultar',
           accelerator: 'Command+H',
           selector: 'hide:',
         },
         {
-          label: 'Hide Others',
+          label: 'Ocultar otros',
           accelerator: 'Command+Shift+H',
           selector: 'hideOtherApplications:',
         },
-        { label: 'Show All', selector: 'unhideAllApplications:' },
+        { label: 'Mostrar todo', selector: 'unhideAllApplications:' },
         { type: 'separator' },
         {
-          label: 'Quit',
+          label: 'Salir',
           accelerator: 'Command+Q',
           click: () => {
             app.quit();
@@ -85,40 +85,40 @@ export default class MenuBuilder {
       ],
     };
     const subMenuEdit: DarwinMenuItemConstructorOptions = {
-      label: 'Edit',
+      label: 'Editar',
       submenu: [
-        { label: 'Undo', accelerator: 'Command+Z', selector: 'undo:' },
-        { label: 'Redo', accelerator: 'Shift+Command+Z', selector: 'redo:' },
+        { label: 'Deshacer', accelerator: 'Command+Z', selector: 'undo:' },
+        { label: 'Rehacer', accelerator: 'Shift+Command+Z', selector: 'redo:' },
         { type: 'separator' },
-        { label: 'Cut', accelerator: 'Command+X', selector: 'cut:' },
-        { label: 'Copy', accelerator: 'Command+C', selector: 'copy:' },
-        { label: 'Paste', accelerator: 'Command+V', selector: 'paste:' },
+        { label: 'Cortar', accelerator: 'Command+X', selector: 'cut:' },
+        { label: 'Copiar', accelerator: 'Command+C', selector: 'copy:' },
+        { label: 'Pegar', accelerator: 'Command+V', selector: 'paste:' },
         {
-          label: 'Select All',
+          label: 'Seleccionar todo',
           accelerator: 'Command+A',
           selector: 'selectAll:',
         },
       ],
     };
     const subMenuViewDev: MenuItemConstructorOptions = {
-      label: 'View',
+      label: 'Vista',
       submenu: [
         {
-          label: 'Reload',
+          label: 'Recargar',
           accelerator: 'Command+R',
           click: () => {
             this.mainWindow.webContents.reload();
           },
         },
         {
-          label: 'Toggle Full Screen',
+          label: 'Pantalla completa',
           accelerator: 'Ctrl+Command+F',
           click: () => {
             this.mainWindow.setFullScreen(!this.mainWindow.isFullScreen());
           },
         },
         // {
-        //   label: 'Toggle Developer Tools',
+        //   label: 'Herramientas de desarrollador',
         //   accelerator: 'Alt+Command+I',
         //   click: () => {
         //     this.mainWindow.webContents.toggleDevTools();
@@ -127,10 +127,10 @@ export default class MenuBuilder {
       ],
     };
     const subMenuViewProd: MenuItemConstructorOptions = {
-      label: 'View',
+      label: 'Vista',
       submenu: [
         {
-          label: 'Toggle Full Screen',
+          label: 'Pantalla completa',
           accelerator: 'Ctrl+Command+F',
           click: () => {
             this.mainWindow.setFullScreen(!this.mainWindow.isFullScreen());
@@ -139,20 +139,24 @@ export default class MenuBuilder {
       ],
     };
     const subMenuWindow: DarwinMenuItemConstructorOptions = {
-      label: 'Window',
+      label: 'Ventana',
       submenu: [
         {
-          label: 'Minimize',
+          label: 'Minimizar',
           accelerator: 'Command+M',
           selector: 'performMiniaturize:',
         },
-        { label: 'Close', accelerator: 'Command+W', selector: 'performClose:' },
+        {
+          label: 'Cerrar',
+          accelerator: 'Command+W',
+          selector: 'performClose:',
+        },
         { type: 'separator' },
-        { label: 'Bring All to Front', selector: 'arrangeInFront:' },
+        { label: 'Traer todo al frente', selector: 'arrangeInFront:' },
       ],
     };
     const subMenuHelp: MenuItemConstructorOptions = {
-      label: 'Help',
+      label: 'Ayuda',
       submenu: [
         {
           label: 'Dashboard VATSIM Spain',
@@ -213,71 +217,98 @@ export default class MenuBuilder {
         ? subMenuViewDev
         : subMenuViewProd;
 
-    return [subMenuAbout, subMenuEdit, subMenuView, subMenuWindow, subMenuHelp];
+    const subMenuUltraSecret: MenuItemConstructorOptions = {
+      label: '🤫',
+      submenu: [
+        {
+          label: 'Modo ULTRA Secreto',
+          type: 'checkbox',
+          checked: false,
+          click: (menuItem) => {
+            this.mainWindow.webContents.send('ultra:secret', menuItem.checked);
+          },
+        },
+      ],
+    };
+
+    return [
+      subMenuAbout,
+      subMenuEdit,
+      subMenuView,
+      subMenuWindow,
+      subMenuHelp,
+      subMenuUltraSecret,
+    ];
   }
 
   buildDefaultTemplate(): MenuItemConstructorOptions[] {
+    const isDev =
+      process.env.NODE_ENV === 'development' ||
+      process.env.DEBUG_PROD === 'true';
+
     const templateDefault: MenuItemConstructorOptions[] = [
-      {
-        label: '&File',
-        submenu: [
-          {
-            label: '&Open',
-            accelerator: 'Ctrl+O',
-          },
-          {
-            label: '&Close',
-            accelerator: 'Ctrl+W',
-            click: () => {
-              this.mainWindow.close();
-            },
-          },
-        ],
-      },
-      {
-        label: '&View',
-        submenu:
-          process.env.NODE_ENV === 'development' ||
-          process.env.DEBUG_PROD === 'true'
-            ? [
+      ...(isDev
+        ? [
+            {
+              label: '&Archivo',
+              submenu: [
                 {
-                  label: '&Reload',
-                  accelerator: 'Ctrl+R',
-                  click: () => {
-                    this.mainWindow.webContents.reload();
-                  },
+                  label: '&Abrir',
+                  accelerator: 'Ctrl+O',
                 },
                 {
-                  label: 'Toggle &Full Screen',
-                  accelerator: 'F11',
+                  label: '&Cerrar',
+                  accelerator: 'Ctrl+W',
                   click: () => {
-                    this.mainWindow.setFullScreen(
-                      !this.mainWindow.isFullScreen(),
-                    );
-                  },
-                },
-                {
-                  label: 'Toggle &Developer Tools',
-                  accelerator: 'Alt+Ctrl+I',
-                  click: () => {
-                    this.mainWindow.webContents.toggleDevTools();
-                  },
-                },
-              ]
-            : [
-                {
-                  label: 'Toggle &Full Screen',
-                  accelerator: 'F11',
-                  click: () => {
-                    this.mainWindow.setFullScreen(
-                      !this.mainWindow.isFullScreen(),
-                    );
+                    this.mainWindow.close();
                   },
                 },
               ],
+            } as MenuItemConstructorOptions,
+          ]
+        : []),
+      {
+        label: '&Vista',
+        submenu: isDev
+          ? [
+              {
+                label: '&Recargar',
+                accelerator: 'Ctrl+R',
+                click: () => {
+                  this.mainWindow.webContents.reload();
+                },
+              },
+              {
+                label: 'Pantalla &completa',
+                accelerator: 'F11',
+                click: () => {
+                  this.mainWindow.setFullScreen(
+                    !this.mainWindow.isFullScreen(),
+                  );
+                },
+              },
+              {
+                label: 'Herramientas de &desarrollador',
+                accelerator: 'Alt+Ctrl+I',
+                click: () => {
+                  this.mainWindow.webContents.toggleDevTools();
+                },
+              },
+            ]
+          : [
+              {
+                label: 'Pantalla &completa',
+                accelerator: 'F11',
+                click: () => {
+                  this.mainWindow.setFullScreen(
+                    !this.mainWindow.isFullScreen(),
+                  );
+                },
+              },
+            ],
       },
       {
-        label: 'Help',
+        label: 'Ayuda',
         submenu: [
           {
             label: 'Dashboard VATSIM Spain',
@@ -327,6 +358,18 @@ export default class MenuBuilder {
             label: 'Contacto: operaciones@vatsimspain.es',
             click() {
               shell.openExternal('mailto:operaciones@vatsimspain.es');
+            },
+          },
+          { type: 'separator' },
+          {
+            label: '👨🏼‍🦲',
+            type: 'checkbox',
+            checked: false,
+            click: (menuItem) => {
+              this.mainWindow.webContents.send(
+                'ultra:secret',
+                menuItem.checked,
+              );
             },
           },
         ],

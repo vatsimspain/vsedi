@@ -3,6 +3,7 @@ import { useWizardController } from './controllers/WizardController.controller';
 import WizardView from './views/WizardView';
 import WelcomeStepView from './views/steps/WelcomeStepView';
 import ChangelogStepView from './views/steps/ChangelogStepView';
+import EuroscopeStepView from './views/steps/EuroscopeStepView';
 import ConfigStepView from './views/steps/ConfigStepView';
 import ExtrasStepView from './views/steps/ExtrasStepView';
 import ProgressStepView from './views/steps/ProgressStepView';
@@ -11,6 +12,7 @@ import FinalStepView from './views/steps/FinalStepView';
 const STEPS: WizardStep[] = [
   { id: 'welcome', title: 'Bienvenida', component: WelcomeStepView },
   { id: 'changelog', title: 'Novedades', component: ChangelogStepView },
+  { id: 'euroscope', title: 'EuroScope', component: EuroscopeStepView },
   { id: 'config', title: 'Configuración', component: ConfigStepView },
   { id: 'extras', title: 'Extras', component: ExtrasStepView },
   { id: 'install', title: 'Instalación', component: ProgressStepView },

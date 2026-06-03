@@ -1,7 +1,7 @@
 {
   "name": "vsedi-vatsimspain",
   "description": "Quickly install VATSIM Spain Sectors",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "keywords": [
     "vsedi",
     "euroscope",
@@ -15,7 +15,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/vatsimspain/vsedi-releases.git"
+    "url": "https://github.com/vatsimspain/vsedi.git"
   },
   "contributors": [
     {
@@ -176,7 +176,7 @@
     "webpack-merge": "^6.0.1"
   },
   "build": {
-    "productName": "VSEDI_VATSIMSpain",
+    "productName": "VSEDI - VATSIM Spain",
     "appId": "org.vatsimspain.vsedi",
     "asar": true,
     "afterSign": ".erb/scripts/notarize.js",
@@ -218,7 +218,7 @@
     "publish": {
       "provider": "github",
       "owner": "vatsimspain",
-      "repo": "vsedi-releases"
+      "repo": "vsedi"
     },
     "win": {
       "target": [

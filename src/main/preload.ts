@@ -2,7 +2,7 @@
 /* eslint no-unused-vars: off */
 import { app, contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 
-export type Channels = 'ipc-example' | 'install:progress';
+export type Channels = 'ipc-example' | 'install:progress' | 'euroscope:install:progress' | 'ultra:secret';
 
 const electronHandler = {
   ipcRenderer: {
@@ -52,6 +52,26 @@ const electronHandler = {
   },
   euroscope: {
     exists: (): Promise<boolean> => ipcRenderer.invoke('euroscope:exists'),
+    getInfo: (): Promise<{
+      installed: boolean;
+      exePath: string | null;
+      version: string | null;
+    }> => ipcRenderer.invoke('euroscope:getInfo'),
+    installMsi: (
+      url: string,
+    ): Promise<{ success: boolean; error?: string }> =>
+      ipcRenderer.invoke('euroscope:installMsi', url),
+    onInstallProgress: (
+      func: (data: { stage: string; percent: number }) => void,
+    ) => {
+      const handler = (
+        _event: IpcRendererEvent,
+        data: { stage: string; percent: number },
+      ) => func(data);
+      ipcRenderer.on('euroscope:install:progress', handler);
+      return () =>
+        ipcRenderer.removeListener('euroscope:install:progress', handler);
+    },
     launch: () => ipcRenderer.send('euroscope:launch'),
   },
   http: {
@@ -62,6 +82,10 @@ const electronHandler = {
       ipcRenderer.invoke('airac:scan', folder),
   },
   getVersion: () => app.getVersion(),
+  ultraSecret: {
+    onChange: (func: (enabled: boolean) => void) =>
+      ipcRenderer.on('ultra:secret', (_event, enabled) => func(enabled as boolean)),
+  },
 };
 
 contextBridge.exposeInMainWorld('electron', electronHandler);

@@ -1,6 +1,6 @@
 {
   "name": "vsedi-vatsimspain",
-  "version": "1.0.6",
+  "version": "7",
   "description": "Quickly install VATSIM Spain Sectors",
   "author": {
     "name": "VATSIM Spain",
@@ -9,12 +9,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/vatsimspain/vsedi-releases.git"
+    "url": "https://github.com/vatsimspain/vsedi.git"
   },
   "publish": {
     "provider": "github",
     "owner": "vatsimspain",
-    "repo": "vsedi-releases"
+    "repo": "vsedi"
   },
   "main": "./dist/main/main.js",
   "scripts": {

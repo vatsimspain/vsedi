@@ -19,6 +19,7 @@ export interface StepProps {
   onBack: () => void;
   isFirst: boolean;
   isLast: boolean;
+  ultraSecret?: boolean;
 }
 
 export interface WizardStep {

@@ -10,13 +10,13 @@
  */
 import path from 'path';
 import fs from 'fs';
-import { exec } from 'child_process';
+import { exec, execSync } from 'child_process';
 import { app, BrowserWindow, shell, ipcMain, dialog } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
-import { runInstall, loadConfig, saveConfig, get, scanInstalledAiracs } from './installHandler';
+import { runInstall, loadConfig, saveConfig, get, scanInstalledAiracs, installEuroscopeMsi } from './installHandler';
 
 class AppUpdater {
   constructor() {
@@ -65,14 +65,74 @@ ipcMain.on('update:install', () => {
   autoUpdater.quitAndInstall();
 });
 
-const EUROSCOPE_PATH = 'C:\\Program Files (x86)\\EuroScope\\EuroScope.exe';
+const EUROSCOPE_FALLBACK = 'C:\\Program Files (x86)\\EuroScope\\EuroScope.exe';
+
+function findEuroscopeInfo(): {
+  exePath: string | null;
+  version: string | null;
+} {
+  const registryKeys = [
+    'HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\EuroScope',
+    'HKLM\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\EuroScope',
+    'HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\EuroScope',
+  ];
+
+  function queryValue(key: string, valueName: string): string | null {
+    try {
+      const out = execSync(`reg query "${key}" /v ${valueName}`, {
+        encoding: 'utf8',
+        timeout: 3000,
+        windowsHide: true,
+      });
+      const match = out.match(new RegExp(`${valueName}\\s+REG_SZ\\s+(.+)`));
+      return match ? match[1].trim() : null;
+    } catch {
+      return null;
+    }
+  }
+
+  for (const key of registryKeys) {
+    let exePath: string | null = null;
+
+    const installLocation = queryValue(key, 'InstallLocation');
+    if (installLocation) {
+      const candidate = path.join(installLocation, 'EuroScope.exe');
+      if (fs.existsSync(candidate)) exePath = candidate;
+    }
+
+    if (!exePath) {
+      const displayIcon = queryValue(key, 'DisplayIcon');
+      if (displayIcon) {
+        const candidate = displayIcon.split(',')[0].trim();
+        if (fs.existsSync(candidate)) exePath = candidate;
+      }
+    }
+
+    if (exePath) {
+      const version = queryValue(key, 'DisplayVersion');
+      return { exePath, version };
+    }
+  }
+
+  if (fs.existsSync(EUROSCOPE_FALLBACK))
+    return { exePath: EUROSCOPE_FALLBACK, version: null };
+  return { exePath: null, version: null };
+}
 
 ipcMain.handle('euroscope:exists', () => {
-  return fs.existsSync(EUROSCOPE_PATH);
+  return findEuroscopeInfo().exePath !== null;
 });
 
+ipcMain.handle('euroscope:getInfo', () => {
+  const { exePath, version } = findEuroscopeInfo();
+  return { installed: exePath !== null, exePath, version };
+});
+
+ipcMain.handle('euroscope:installMsi', installEuroscopeMsi);
+
 ipcMain.on('euroscope:launch', () => {
-  exec(`"${EUROSCOPE_PATH}"`);
+  const exePath = findEuroscopeInfo().exePath ?? EUROSCOPE_FALLBACK;
+  exec(`"${exePath}"`);
 });
 
 ipcMain.handle('http:getText', async (_event, url: string) => {
@@ -130,7 +190,7 @@ const createWindow = async () => {
 
   mainWindow = new BrowserWindow({
     show: false,
-    width: 1024,
+    width: 1444,
     height: 920,
     icon: getAssetPath('icon.png'),
     webPreferences: {

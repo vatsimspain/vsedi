@@ -113,7 +113,93 @@ function getAssetsPath(): string {
     : path.join(__dirname, '../../assets');
 }
 
-function installFont(assetPath: string): Promise<void> {
+// Runs a PowerShell command string. When elevated=true, triggers a UAC prompt
+// and runs the command in an elevated child process via Start-Process -Verb RunAs.
+function runPowerShell(cmd: string, elevated = false): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (elevated) {
+      const tmpScript = path.join(os.tmpdir(), `vsedi-ps-${Date.now()}.ps1`);
+      try {
+        fs.writeFileSync(tmpScript, cmd, 'utf8');
+      } catch (err) {
+        reject(err);
+        return;
+      }
+      const cleanup = () => {
+        try {
+          fs.unlinkSync(tmpScript);
+        } catch {
+          /* ignore */
+        }
+      };
+      const elevateCmd = `$proc = Start-Process powershell -ArgumentList @('-NoProfile', '-NonInteractive', '-File', '${tmpScript.replace(/'/g, "''")}') -Verb RunAs -Wait -PassThru; exit $proc.ExitCode`;
+      const ps = spawn('powershell', [
+        '-NoProfile',
+        '-NonInteractive',
+        '-Command',
+        elevateCmd,
+      ]);
+      ps.on('close', (code) => {
+        cleanup();
+        if (code === 0) resolve();
+        else reject(new Error(`PowerShell (elevated) exited with code ${code}`));
+      });
+      ps.on('error', (err) => {
+        cleanup();
+        reject(err);
+      });
+    } else {
+      const ps = spawn('powershell', [
+        '-NoProfile',
+        '-NonInteractive',
+        '-Command',
+        cmd,
+      ]);
+      let stderr = '';
+      ps.stderr.on('data', (d: Buffer) => {
+        stderr += d.toString();
+      });
+      ps.on('close', (code) => {
+        if (code === 0) resolve();
+        else reject(new Error(stderr || `PowerShell exited with code ${code}`));
+      });
+      ps.on('error', reject);
+    }
+  });
+}
+
+// Writes a file, retrying with an elevated UAC prompt on permission errors.
+// Uses a temp-file-then-move strategy to avoid encoding issues with Set-Content.
+async function writeFileSafe(
+  filePath: string,
+  content: string,
+  encoding: BufferEncoding,
+): Promise<void> {
+  try {
+    fs.writeFileSync(filePath, content, encoding);
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException).code;
+    if (code !== 'EACCES' && code !== 'EPERM') throw err;
+    const tmpFile = path.join(os.tmpdir(), `vsedi-write-${Date.now()}.tmp`);
+    fs.writeFileSync(tmpFile, content, encoding);
+    const cmd = `Move-Item -LiteralPath '${tmpFile.replace(/'/g, "''")}' -Destination '${filePath.replace(/'/g, "''")}' -Force`;
+    await runPowerShell(cmd, true);
+  }
+}
+
+// Creates a directory, retrying elevated on permission errors.
+async function mkdirSafe(dir: string): Promise<void> {
+  try {
+    fs.mkdirSync(dir, { recursive: true });
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException).code;
+    if (code !== 'EACCES' && code !== 'EPERM') throw err;
+    const cmd = `New-Item -ItemType Directory -Force -LiteralPath '${dir.replace(/'/g, "''")}'`;
+    await runPowerShell(cmd, true);
+  }
+}
+
+async function installFont(assetPath: string): Promise<void> {
   const src = path.join(getAssetsPath(), assetPath);
   const fontName = path.basename(assetPath, path.extname(assetPath));
   const cmd = [
@@ -124,23 +210,7 @@ function installFont(assetPath: string): Promise<void> {
     `New-ItemProperty -Path $reg -Name '${fontName} (TrueType)' -Value $dst -PropertyType String -Force | Out-Null`,
   ].join('; ');
 
-  return new Promise((resolve, reject) => {
-    const ps = spawn('powershell', [
-      '-NoProfile',
-      '-NonInteractive',
-      '-Command',
-      cmd,
-    ]);
-    let stderr = '';
-    ps.stderr.on('data', (d: Buffer) => {
-      stderr += d.toString();
-    });
-    ps.on('close', (code) => {
-      if (code === 0) resolve();
-      else reject(new Error(stderr || `Font install exited with code ${code}`));
-    });
-    ps.on('error', reject);
-  });
+  await runPowerShell(cmd).catch(() => runPowerShell(cmd, true));
 }
 
 function runSilentInstaller(exePath: string, args: string[]): Promise<void> {
@@ -154,35 +224,18 @@ function runSilentInstaller(exePath: string, args: string[]): Promise<void> {
   });
 }
 
-function extractZip(zipPath: string, destPath: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vsedi-'));
+async function extractZip(zipPath: string, destPath: string): Promise<void> {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vsedi-'));
+  const cmd = [
+    `$tmp = '${tmpDir.replace(/'/g, "''")}'`,
+    `Expand-Archive -LiteralPath '${zipPath.replace(/'/g, "''")}' -DestinationPath $tmp -Force`,
+    `$items = @(Get-ChildItem -LiteralPath $tmp)`,
+    `$src = if ($items.Count -eq 1 -and $items[0].PSIsContainer) { $items[0].FullName } else { $tmp }`,
+    `Get-ChildItem -LiteralPath $src | Move-Item -Destination '${destPath.replace(/'/g, "''")}' -Force`,
+    `Remove-Item -LiteralPath $tmp -Recurse -Force`,
+  ].join('; ');
 
-    const cmd = [
-      `$tmp = '${tmpDir.replace(/'/g, "''")}'`,
-      `Expand-Archive -LiteralPath '${zipPath.replace(/'/g, "''")}' -DestinationPath $tmp -Force`,
-      `$items = @(Get-ChildItem -LiteralPath $tmp)`,
-      `$src = if ($items.Count -eq 1 -and $items[0].PSIsContainer) { $items[0].FullName } else { $tmp }`,
-      `Get-ChildItem -LiteralPath $src | Move-Item -Destination '${destPath.replace(/'/g, "''")}' -Force`,
-      `Remove-Item -LiteralPath $tmp -Recurse -Force`,
-    ].join('; ');
-
-    const ps = spawn('powershell', [
-      '-NoProfile',
-      '-NonInteractive',
-      '-Command',
-      cmd,
-    ]);
-    let stderr = '';
-    ps.stderr.on('data', (d: Buffer) => {
-      stderr += d.toString();
-    });
-    ps.on('close', (code) => {
-      if (code === 0) resolve();
-      else reject(new Error(stderr || `PowerShell exited with code ${code}`));
-    });
-    ps.on('error', reject);
-  });
+  await runPowerShell(cmd).catch(() => runPowerShell(cmd, true));
 }
 
 const FONT_SIZE_VALUES: Record<'small' | 'medium' | 'large', string> = {
@@ -211,10 +264,10 @@ function findSymbologyFiles(dir: string): string[] {
   return results;
 }
 
-function patchSymbologyFontSize(
+async function patchSymbologyFontSize(
   folder: string,
   fontSize: 'small' | 'medium' | 'large',
-): void {
+): Promise<void> {
   const sizeValue = FONT_SIZE_VALUES[fontSize];
   if (!sizeValue) return;
   const targetEntries = new Set(SYMBOLOGY_FONT_ENTRIES);
@@ -236,7 +289,7 @@ function patchSymbologyFontSize(
     });
 
     if (changed)
-      fs.writeFileSync(filePath, updatedLines.join(lineEnding), 'utf8');
+      await writeFileSafe(filePath, updatedLines.join(lineEnding), 'utf8');
   }
 }
 
@@ -250,14 +303,14 @@ function findPrfFiles(dir: string): string[] {
   return results;
 }
 
-function patchPrfFiles(
+async function patchPrfFiles(
   folder: string,
   name: string,
   cid: string,
   password: string,
   rank: string,
   hoppieCode: string,
-): void {
+): Promise<void> {
   const rating = RATING_MAP[rank] ?? 1;
   const injected = [
     `LastSession\trealname\t${name}`,
@@ -275,21 +328,62 @@ function patchPrfFiles(
       .split(/\r?\n/)
       .filter((l) => !prefixes.some((p) => l.startsWith(p)));
     const newContent = [...lines, ...injected].join('\r\n');
-    fs.writeFileSync(prfPath, newContent, 'latin1');
+    await writeFileSafe(prfPath, newContent, 'latin1');
   }
 }
 
 const HOPPIE_SECTORS = ['LECM', 'LECB', 'GCCC'];
 
-function createHoppieFiles(folder: string, hoppieCode: string): void {
+async function createHoppieFiles(
+  folder: string,
+  hoppieCode: string,
+): Promise<void> {
   for (const sector of HOPPIE_SECTORS) {
     const dir = path.join(folder, sector, 'Plugins', 'TopSky');
-    fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(
+    await mkdirSafe(dir);
+    await writeFileSafe(
       path.join(dir, 'TopSkyCPDLChoppieCode.txt'),
       hoppieCode,
       'utf8',
     );
+  }
+}
+
+export async function installEuroscopeMsi(
+  event: IpcMainInvokeEvent,
+  url: string,
+): Promise<{ success: boolean; error?: string }> {
+  const tmpPath = path.join(os.tmpdir(), `vsedi-euroscope-${Date.now()}.msi`);
+  try {
+    await downloadWithProgress(url, tmpPath, (pct) => {
+      event.sender.send('euroscope:install:progress', {
+        stage: 'downloading',
+        percent: pct,
+      });
+    });
+    event.sender.send('euroscope:install:progress', {
+      stage: 'installing',
+      percent: 0,
+    });
+    await new Promise<void>((resolve, reject) => {
+      const proc = spawn('msiexec', ['/i', tmpPath]);
+      proc.on('close', (code) => {
+        // 0=success, 1602=user cancelled, 3010=success+reboot required
+        if (code === 0 || code === 1602 || code === 3010 || code === null)
+          resolve();
+        else reject(new Error(`msiexec salió con código ${code}`));
+      });
+      proc.on('error', reject);
+    });
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: (err as Error).message };
+  } finally {
+    try {
+      fs.unlinkSync(tmpPath);
+    } catch {
+      /* ignore */
+    }
   }
 }
 
@@ -377,14 +471,14 @@ export async function runInstall(
       send({ stage: 'downloading', percent: pct });
     });
 
-    // 3. Extract
+    // 3. Extract (retries elevated via UAC if destination is write-protected)
     send({ stage: 'extracting', percent: 0 });
     await extractZip(tmpPath, destFolder);
 
-    // 4. Patch .prf files with user credentials
-    patchPrfFiles(destFolder, name, cid, password, rank, hoppieCode);
-    createHoppieFiles(destFolder, hoppieCode);
-    patchSymbologyFontSize(destFolder, fontSize);
+    // 4. Patch .prf files with user credentials (retries elevated on EACCES/EPERM)
+    await patchPrfFiles(destFolder, name, cid, password, rank, hoppieCode);
+    await createHoppieFiles(destFolder, hoppieCode);
+    await patchSymbologyFontSize(destFolder, fontSize);
 
     // 5. Cleanup
     try {

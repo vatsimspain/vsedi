@@ -1,5 +1,6 @@
 import { useConfigController } from '../../controllers/ConfigController.controller';
 import type { StepProps } from '../../models/wizard.types';
+import EuroscopeLogo from '../../../../assets/logo/euroscope.png';
 
 const RANKS = [
   { value: '', label: 'Selecciona tu rango...' },
@@ -34,6 +35,8 @@ export default function ConfigStepView({
   onBack,
 }: StepProps) {
   const { pickSectorsFolder } = useConfigController(setFormData);
+
+
 
   return (
     <div className="flex flex-col gap-6">
@@ -80,14 +83,16 @@ export default function ConfigStepView({
           <label className={labelClass} htmlFor="name">
             Nombre en red
           </label>
-          <input
-            id="name"
-            className={inputClass}
-            type="text"
-            placeholder="Ej. Pepe Viyuela"
-            value={formData.name}
-            onChange={(e) => setFormData({ name: e.target.value })}
-          />
+          <div className="flex items-center gap-2">
+            <input
+              id="name"
+              className={`${inputClass} flex-1`}
+              type="text"
+              placeholder="Ej. Pepe Viyuela"
+              value={formData.name}
+              onChange={(e) => setFormData({ name: e.target.value })}
+            />
+          </div>
         </div>
 
         <div>
