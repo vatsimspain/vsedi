@@ -71,10 +71,27 @@ function findEuroscopeInfo(): {
   exePath: string | null;
   version: string | null;
 } {
-  const registryKeys = [
+  const exactKeys = [
     'HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\EuroScope',
+    'HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\EuroScope_is1',
+    'HKCU\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\EuroScope',
+    'HKCU\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\EuroScope_is1',
     'HKLM\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\EuroScope',
+    'HKLM\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\EuroScope_is1',
     'HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\EuroScope',
+    'HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\EuroScope_is1',
+  ];
+
+  const uninstallRoots = [
+    'HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall',
+    'HKCU\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall',
+    'HKLM\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall',
+    'HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall',
+  ];
+
+  const fallbackPaths = [
+    'C:\\Program Files (x86)\\EuroScope\\EuroScope.exe',
+    'C:\\Program Files\\EuroScope\\EuroScope.exe',
   ];
 
   function queryValue(key: string, valueName: string): string | null {
@@ -91,7 +108,9 @@ function findEuroscopeInfo(): {
     }
   }
 
-  for (const key of registryKeys) {
+  function tryKey(
+    key: string,
+  ): { exePath: string; version: string | null } | null {
     let exePath: string | null = null;
 
     const installLocation = queryValue(key, 'InstallLocation');
@@ -103,19 +122,48 @@ function findEuroscopeInfo(): {
     if (!exePath) {
       const displayIcon = queryValue(key, 'DisplayIcon');
       if (displayIcon) {
-        const candidate = displayIcon.split(',')[0].trim();
+        const candidate = displayIcon.split(',')[0].trim().replace(/^"|"$/g, '');
         if (fs.existsSync(candidate)) exePath = candidate;
       }
     }
 
-    if (exePath) {
-      const version = queryValue(key, 'DisplayVersion');
-      return { exePath, version };
+    if (!exePath) return null;
+    return { exePath, version: queryValue(key, 'DisplayVersion') };
+  }
+
+  // 1. Try well-known exact key names
+  for (const key of exactKeys) {
+    const result = tryKey(key);
+    if (result) return result;
+  }
+
+  // 2. Search all Uninstall entries whose DisplayName contains "EuroScope"
+  //    (catches GUID-based keys and variant installer names)
+  const triedKeys = new Set(exactKeys.map((k) => k.toUpperCase()));
+  for (const root of uninstallRoots) {
+    try {
+      const out = execSync(
+        `reg query "${root}" /f "EuroScope" /v DisplayName /s`,
+        { encoding: 'utf8', timeout: 5000, windowsHide: true },
+      );
+      for (const line of out.split('\n')) {
+        const trimmed = line.trim();
+        if (/^HKEY_/i.test(trimmed) && !triedKeys.has(trimmed.toUpperCase())) {
+          triedKeys.add(trimmed.toUpperCase());
+          const result = tryKey(trimmed);
+          if (result) return result;
+        }
+      }
+    } catch {
+      // no matches in this hive
     }
   }
 
-  if (fs.existsSync(EUROSCOPE_FALLBACK))
-    return { exePath: EUROSCOPE_FALLBACK, version: null };
+  // 3. Check common install paths
+  for (const fallback of fallbackPaths) {
+    if (fs.existsSync(fallback)) return { exePath: fallback, version: null };
+  }
+
   return { exePath: null, version: null };
 }
 
