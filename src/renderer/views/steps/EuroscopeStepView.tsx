@@ -9,7 +9,7 @@ const VERSIONS = [
     version: '3.2.3.2',
     description: 'Versión recomendada por VATSIM Spain',
     url: 'https://euroscope.hu/install/EuroScopeSetup.3.2.3.2.msi',
-    recommended: true, 
+    recommended: true,
   },
   {
     id: 'latest',
@@ -102,7 +102,7 @@ export default function EuroscopeStepView({ onNext, onBack }: StepProps) {
       {phase === 'checking' && (
         <div className="flex items-center gap-3 text-sm text-slate-400">
           <div className="flex-shrink-0 w-4 h-4 border-2 rounded-full border-slate-600 border-t-zinc-300 animate-spin" />
-          Verificando instalación...
+          Buscando tu instalación de Euroscope...
         </div>
       )}
 

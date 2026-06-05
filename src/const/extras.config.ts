@@ -1,41 +1,34 @@
+type ExtraBase = {
+  id: string;
+  name: string;
+  description: string;
+  version?: string;
+  /** Registry DisplayName used to detect if already installed */
+  detectionName?: string;
+};
+
 export type ExtraConfig =
-  | {
-      id: string;
-      name: string;
-      description: string;
-      version?: string;
+  | (ExtraBase & {
       source: 'github';
       githubRepo: string;
       releaseTag: string;
       assetPattern: RegExp;
       installArgs: string[];
-    }
-  | {
-      id: string;
-      name: string;
-      description: string;
-      version?: string;
+    })
+  | (ExtraBase & {
       source: 'url';
       downloadUrl: string;
       installArgs: string[];
-    }
-  | {
-      id: string;
-      name: string;
-      description: string;
-      version?: string;
+    })
+  | (ExtraBase & {
       source: 'local';
       localPath: string;
       installArgs: string[];
-    }
-  | {
-      id: string;
-      name: string;
-      description: string;
-      version?: string;
+    })
+  | (ExtraBase & {
       source: 'font';
       assetPath: string;
-    };
+    });
 
 export const EXTRAS: ExtraConfig[] = [
   {
