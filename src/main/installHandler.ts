@@ -21,7 +21,7 @@ function getConfigPath(): string {
   return path.join(app.getPath('userData'), 'vsedi-config.json');
 }
 
-function readConfig(): SavedConfig {
+export function readConfig(): SavedConfig {
   try {
     return JSON.parse(fs.readFileSync(getConfigPath(), 'utf8')) as SavedConfig;
   } catch {

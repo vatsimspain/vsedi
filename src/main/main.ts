@@ -16,7 +16,7 @@ import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
-import { runInstall, loadConfig, saveConfig, get, scanInstalledAiracs, installEuroscopeMsi } from './installHandler';
+import { runInstall, loadConfig, saveConfig, readConfig, get, scanInstalledAiracs, installEuroscopeMsi } from './installHandler';
 
 class AppUpdater {
   constructor() {
@@ -65,44 +65,26 @@ ipcMain.on('update:install', () => {
   autoUpdater.quitAndInstall();
 });
 
-const EUROSCOPE_FALLBACK = 'C:\\Program Files (x86)\\EuroScope\\EuroScope.exe';
+const EUROSCOPE_FALLBACK = path.join(
+  process.env['ProgramFiles(x86)'] ?? 'C:\\Program Files (x86)',
+  'EuroScope',
+  'EuroScope.exe',
+);
 
 function findEuroscopeInfo(): {
   exePath: string | null;
   version: string | null;
 } {
-  // The EuroScope MSI installer always leaves InstallLocation and DisplayIcon
-  // empty in the registry (confirmed via MsiGetProductInfo). Registry-based
-  // path detection is therefore unreliable. We check known filesystem paths
-  // directly, which is fast and covers all normal install locations.
-  const candidates: string[] = [];
-  try {
-    const out = execSync('fsutil fsinfo drives', {
-      encoding: 'utf8',
-      timeout: 3000,
-      windowsHide: true,
-    });
-    for (const drive of out.match(/[A-Z]:\\/gi) ?? ['C:\\']) {
-      const d = drive.replace('\\', '');
-      candidates.push(path.join(d + '\\', 'Program Files (x86)', 'EuroScope', 'EuroScope.exe'));
-      candidates.push(path.join(d + '\\', 'EuroScope', 'EuroScope.exe'));
-    }
-  } catch {
-    candidates.push(EUROSCOPE_FALLBACK);
-  }
-
-  const exePath = candidates.find((c) => fs.existsSync(c)) ?? null;
+  const saved = readConfig().euroscopePath;
+  const exePath = saved && fs.existsSync(saved) ? saved : null;
   if (!exePath) return { exePath: null, version: null };
 
-  // Version: try the current MSI product key, then the older Inno Setup key.
-  // Both are direct lookups — no recursive search.
   let version: string | null = null;
-  const versionKeys = [
+  for (const key of [
     'HKLM\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{311B700B-A574-47EE-ACE0-D8F0C14F25D4}',
     'HKLM\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\EuroScope_is1',
     'HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\EuroScope_is1',
-  ];
-  for (const key of versionKeys) {
+  ]) {
     try {
       const out = execSync(`reg query "${key}" /v DisplayVersion`, {
         encoding: 'utf8',
@@ -127,6 +109,17 @@ ipcMain.handle('euroscope:getInfo', () => {
 });
 
 ipcMain.handle('euroscope:installMsi', installEuroscopeMsi);
+
+ipcMain.handle('euroscope:browse', async () => {
+  if (!mainWindow) return null;
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: 'Seleccionar EuroScope.exe',
+    properties: ['openFile'],
+    filters: [{ name: 'EuroScope', extensions: ['exe'] }],
+    defaultPath: process.env['ProgramFiles(x86)'] ?? 'C:\\Program Files (x86)',
+  });
+  return result.canceled ? null : (result.filePaths[0] ?? null);
+});
 
 ipcMain.on('euroscope:launch', () => {
   const exePath = findEuroscopeInfo().exePath ?? EUROSCOPE_FALLBACK;

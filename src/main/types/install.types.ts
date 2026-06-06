@@ -19,6 +19,7 @@ export interface SavedConfig {
   fontSize?: 'small' | 'medium' | 'large';
   sectorsFolder?: string;
   overwriteSettings?: boolean;
+  euroscopePath?: string;
 }
 
 export interface InstallResult {

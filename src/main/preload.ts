@@ -73,6 +73,7 @@ const electronHandler = {
         ipcRenderer.removeListener('euroscope:install:progress', handler);
     },
     launch: () => ipcRenderer.send('euroscope:launch'),
+    browse: (): Promise<string | null> => ipcRenderer.invoke('euroscope:browse'),
   },
   http: {
     getText: (url: string): Promise<string> => ipcRenderer.invoke('http:getText', url),
