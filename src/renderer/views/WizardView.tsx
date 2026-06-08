@@ -1,6 +1,7 @@
 import type { StepProps, WizardStep } from '../models/wizard.types';
 import StepIndicator from '../components/StepIndicator.component';
 import UpdateBanner from '../components/UpdateBanner.component';
+import OpenSourceBanner from '../components/OpenSourceBanner.component';
 import WhiteLogo from '../../../assets/logo/WhiteLogo.png';
 import WhiteLogoAlt from '../../../assets/logo/WhiteLogoAlt.png';
 import Discord from '../../../assets/media/discord.png';
@@ -8,6 +9,7 @@ import Instagram from '../../../assets/media/ig.png';
 import YouTube from '../../../assets/media/yt.png';
 import X from '../../../assets/media/x.png';
 import TikTok from '../../../assets/media/tik-tok.png';
+import GitHub from '../../../assets/media/gh.png';
 import Bg1 from '../../../assets/bg/1.png';
 import Bg2 from '../../../assets/bg/2.png';
 import Bg3 from '../../../assets/bg/3.png';
@@ -50,6 +52,7 @@ export default function WizardView({ steps, currentStep, stepProps }: Props) {
         />
       ))}
       <UpdateBanner />
+      <OpenSourceBanner />
       <div className="absolute inset-0 bg-black/70" />
       <div className="relative flex flex-col flex-1 overflow-hidden">
         <div className="flex items-center justify-between flex-shrink-0 px-8 py-5 box-shadow-lg shadow-black/30">
@@ -71,6 +74,17 @@ export default function WizardView({ steps, currentStep, stepProps }: Props) {
 
       <div className="relative flex items-center justify-between flex-shrink-0 w-full p-2 text-xs ">
         <div className="flex items-center gap-2 ">
+          <a
+            href="https://github.com/vatsimspain/vsedi"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img
+              src={GitHub}
+              alt="GitHub Logo"
+              className="w-6 hover:cursor-pointer hover:scale-105"
+            />
+          </a>
           <a
             href="https://dashboard.vatsimspain.es"
             target="_blank"

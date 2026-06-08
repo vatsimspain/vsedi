@@ -311,6 +311,13 @@ export default class MenuBuilder {
         label: 'Ayuda',
         submenu: [
           {
+            label: 'Repositorio en GitHub',
+            click() {
+              shell.openExternal('https://github.com/vatsimspain/vsedi');
+            },
+          },
+          { type: 'separator' },
+          {
             label: 'Dashboard VATSIM Spain',
             click() {
               shell.openExternal('https://dashboard.vatsimspain.es');
