@@ -229,10 +229,12 @@ async function extractZip(zipPath: string, destPath: string): Promise<void> {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vsedi-'));
   const cmd = [
     `$tmp = '${tmpDir.replace(/'/g, "''")}'`,
+    `$dest = '${destPath.replace(/'/g, "''")}'`,
     `Expand-Archive -LiteralPath '${zipPath.replace(/'/g, "''")}' -DestinationPath $tmp -Force`,
     `$items = @(Get-ChildItem -LiteralPath $tmp)`,
     `$src = if ($items.Count -eq 1 -and $items[0].PSIsContainer) { $items[0].FullName } else { $tmp }`,
-    `Get-ChildItem -LiteralPath $src | Move-Item -Destination '${destPath.replace(/'/g, "''")}' -Force`,
+    `& robocopy $src $dest /E /IS /IT /IM | Out-Null`,
+    `if ($LASTEXITCODE -ge 8) { throw "robocopy failed with exit code $LASTEXITCODE" }`,
     `Remove-Item -LiteralPath $tmp -Recurse -Force`,
   ].join('; ');
 
