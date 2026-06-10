@@ -1,10 +1,10 @@
-# VSEDI, VATSIM Spain
+# VSEDI - VATSIM Spain
 
 Install and configure EuroScope sectors for VATSIM Spain in seconds.
 
 **[Features](#features) • [Wizard Steps](#wizard-steps) • [Setup](#setup) • [Requirements](#requirements) • [Download](#download) • [License](#license)**
 
----
+## ![VSEDI](./assets/readme.png)
 
 VSEDI is a desktop application for VATSIM Spain controllers that fully automates the installation and configuration of EuroScope: AIRAC sectors, network credentials, additional plugins, and font settings, all through a guided step-by-step wizard.
 
