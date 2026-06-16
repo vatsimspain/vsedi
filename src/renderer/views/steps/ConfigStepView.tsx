@@ -1,4 +1,5 @@
 import { useConfigController } from '../../controllers/ConfigController.controller';
+import { ArrowRightIcon } from '../../icons/ArrowRight.icon';
 import type { StepProps } from '../../models/wizard.types';
 
 const RANKS = [
@@ -215,27 +216,39 @@ export default function ConfigStepView({
         </div>
       </div>
 
+      <div className="flex items-center gap-3">
+        <div className="checkbox-wrapper-26">
+          <input
+            type="checkbox"
+            id="backupAndCleanSectors"
+            checked={formData.backupAndCleanSectors}
+            onChange={(e) =>
+              setFormData({ backupAndCleanSectors: e.target.checked })
+            }
+          />
+          <label htmlFor="backupAndCleanSectors">
+            <div className="tick_mark" />
+          </label>
+        </div>
+        <div>
+          <span className="text-sm text-zinc-300">
+            Backup y limpieza de sectores antiguos
+          </span>
+          <p className="text-xs text-zinc-500">
+            Se hará una copia .zip de tu carpeta de Euroscope (VSEDI_Backup) y
+            se eliminarán los .prf, .sct, .ese y .rwy antiguos de LECB, LECM,
+            GCCC y LEXX antes de instalar
+          </p>
+        </div>
+      </div>
+
       <div className="flex items-center justify-between pt-1">
         <button
           type="button"
           onClick={onBack}
           className="flex items-center gap-2 px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-900 text-white text-sm font-medium rounded-lg transition-colors"
         >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-            aria-hidden
-          >
-            <path
-              d="M13 8H3M7 12l-4-4 4-4"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <ArrowRightIcon className="w-4 h-4 rotate-180" />
           Atrás
         </button>
         <button
@@ -245,21 +258,7 @@ export default function ConfigStepView({
           className="flex items-center gap-2 px-5 py-2.5 bg-zinc-700 hover:bg-zinc-600 active:bg-zinc-800 text-white text-sm font-medium rounded-lg transition-colors"
         >
           Continuar
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-            aria-hidden
-          >
-            <path
-              d="M3 8h10M9 4l4 4-4 4"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <ArrowRightIcon className="w-4 h-4" />
         </button>
       </div>
     </div>

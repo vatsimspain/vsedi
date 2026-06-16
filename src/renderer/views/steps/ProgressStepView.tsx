@@ -1,8 +1,13 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useInstallation } from '../../hooks/useInstallation.hook';
 import type { StepProps } from '../../models/wizard.types';
 import { EXTRAS } from '../../../const/extras.config';
 import { TickIcon } from '../../icons/TickIcon.icon';
+
+const BACKUP_TASK = {
+  label: 'Haciendo backup y limpiando sectores antiguos',
+  stage: 'backup',
+} as const;
 
 const BASE_TASKS = [
   { label: 'Obteniendo información del release', stage: 'fetching' },
@@ -10,24 +15,23 @@ const BASE_TASKS = [
   { label: 'Instalando en EuroScope', stage: 'extracting' },
 ] as const;
 
-type BaseStage = (typeof BASE_TASKS)[number]['stage'];
-
-const BASE_STAGE_INDEX: Record<BaseStage, number> = {
-  fetching: 0,
-  downloading: 1,
-  extracting: 2,
-};
-
 function overallProgress(
   stage: string,
   dlPercent: number,
   doneExtras: number,
   totalExtras: number,
+  hasBackup: boolean,
 ): number {
   if (stage === 'idle') return 0;
   if (stage === 'fetching') return 3;
-  if (stage === 'downloading') return 5 + dlPercent * 0.8;
-  if (stage === 'extracting') return 87;
+  if (hasBackup) {
+    if (stage === 'downloading') return 5 + dlPercent * 0.6;
+    if (stage === 'backup') return 70;
+    if (stage === 'extracting') return 85;
+  } else {
+    if (stage === 'downloading') return 5 + dlPercent * 0.8;
+    if (stage === 'extracting') return 87;
+  }
   if (stage === 'extras') {
     const extraShare = totalExtras > 0 ? (doneExtras / totalExtras) * 10 : 0;
     return 90 + extraShare;
@@ -47,10 +51,17 @@ export default function ProgressStepView({
   const hasError = status === 'error';
 
   const selectedExtras = EXTRAS.filter((e) => formData.extras.includes(e.id));
+  const hasBackup = formData.backupAndCleanSectors;
+
+  const tasks = useMemo(() => {
+    if (!hasBackup) return BASE_TASKS;
+    return [BASE_TASKS[0], BASE_TASKS[1], BACKUP_TASK, BASE_TASKS[2]];
+  }, [hasBackup]);
 
   useEffect(() => {
     install({
       overwriteSettings: formData.overwriteSettings,
+      backupAndCleanSectors: formData.backupAndCleanSectors,
       destFolder: formData.sectorsFolder,
       name: formData.name,
       cid: formData.cid,
@@ -71,12 +82,14 @@ export default function ProgressStepView({
     progress,
     doneExtras,
     selectedExtras.length,
+    hasBackup,
   );
 
+  const stageIndex = tasks.findIndex((t) => t.stage === status);
   const baseCompletedCount =
     status === 'done' || status === 'extras'
-      ? BASE_TASKS.length
-      : (BASE_STAGE_INDEX[status as BaseStage] ?? 0);
+      ? tasks.length
+      : Math.max(stageIndex, 0);
 
   return (
     <div className="flex flex-col gap-6">
@@ -119,7 +132,7 @@ export default function ProgressStepView({
           </div>
 
           <ul className="flex flex-col gap-2.5">
-            {BASE_TASKS.map((task, i) => {
+            {tasks.map((task, i) => {
               const isComplete = i < baseCompletedCount;
               const isActive =
                 !isComplete &&

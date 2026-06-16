@@ -241,6 +241,76 @@ async function extractZip(zipPath: string, destPath: string): Promise<void> {
   await runPowerShell(cmd).catch(() => runPowerShell(cmd, true));
 }
 
+// Deletes a file, retrying elevated on permission errors.
+async function deleteFileSafe(filePath: string): Promise<void> {
+  try {
+    fs.unlinkSync(filePath);
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException).code;
+    if (code !== 'EACCES' && code !== 'EPERM') throw err;
+    const cmd = `Remove-Item -LiteralPath '${filePath.replace(/'/g, "''")}' -Force`;
+    await runPowerShell(cmd, true);
+  }
+}
+
+function formatBackupTimestamp(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return (
+    `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}` +
+    `_${pad(date.getHours())}${pad(date.getMinutes())}${pad(date.getSeconds())}`
+  );
+}
+
+const STALE_PRF_NAMES = new Set(['lecb.prf', 'lecm.prf', 'gccc.prf']);
+const STALE_FILE_PREFIXES = ['lexx', 'lecm', 'lecb', 'gccc'];
+const STALE_FILE_EXTENSIONS = new Set(['.sct', '.ese', '.rwy']);
+
+function isStaleSectorFile(fileName: string): boolean {
+  const lower = fileName.toLowerCase();
+  const ext = path.extname(lower);
+  if (ext === '.prf') return STALE_PRF_NAMES.has(lower);
+  if (STALE_FILE_EXTENSIONS.has(ext))
+    return STALE_FILE_PREFIXES.some((p) => lower.startsWith(p));
+  return false;
+}
+
+function findStaleSectorFiles(dir: string): string[] {
+  const results: string[] = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) results.push(...findStaleSectorFiles(full));
+    else if (isStaleSectorFile(entry.name)) results.push(full);
+  }
+  return results;
+}
+
+// Zips the whole sectors folder into "VSEDI_Backup_<timestamp>.zip" inside that
+// same folder, then deletes the stale per-sector files left over by previous
+// installs (.prf for LECB/LECM/GCCC, and .sct/.ese/.rwy starting with
+// LEXX/LECM/LECB/GCCC) so the new release doesn't end up next to outdated ones.
+async function backupAndCleanSectorsFolder(folder: string): Promise<void> {
+  const zipName = `VSEDI_Backup_${formatBackupTimestamp(new Date())}.zip`;
+  const destZip = path.join(folder, zipName);
+  const tmpZip = path.join(os.tmpdir(), `vsedi-backup-${Date.now()}.zip`);
+
+  const cmd = [
+    `$folder = '${folder.replace(/'/g, "''")}'`,
+    `$tmpZip = '${tmpZip.replace(/'/g, "''")}'`,
+    `$destZip = '${destZip.replace(/'/g, "''")}'`,
+    // Exclude previous backups so they don't pile up inside each other
+    `$items = @(Get-ChildItem -LiteralPath $folder -Force | Where-Object { $_.Name -notlike 'VSEDI_Backup_*.zip' })`,
+    `if ($items.Count -eq 0) { throw 'La carpeta de sectores está vacía, no se puede hacer backup.' }`,
+    `Compress-Archive -LiteralPath $items.FullName -DestinationPath $tmpZip -Force`,
+    `Move-Item -LiteralPath $tmpZip -Destination $destZip -Force`,
+  ].join('; ');
+
+  await runPowerShell(cmd).catch(() => runPowerShell(cmd, true));
+
+  for (const filePath of findStaleSectorFiles(folder)) {
+    await deleteFileSafe(filePath);
+  }
+}
+
 const FONT_SIZE_VALUES: Record<'small' | 'medium' | 'large', string> = {
   small: '3.0',
   medium: '3.5',
@@ -437,6 +507,7 @@ export async function runInstall(
 ): Promise<InstallResult> {
   const {
     overwriteSettings,
+    backupAndCleanSectors,
     destFolder,
     name,
     cid,
@@ -474,23 +545,31 @@ export async function runInstall(
       send({ stage: 'downloading', percent: pct });
     });
 
-    // 3. Extract (retries elevated via UAC if destination is write-protected)
+    // 3. Backup + clean stale sector files (opt-in, runs before extraction so
+    // the backup captures the pre-update state)
+    if (backupAndCleanSectors) {
+      send({ stage: 'backup', percent: 0 });
+      await backupAndCleanSectorsFolder(destFolder);
+      send({ stage: 'backup', percent: 100 });
+    }
+
+    // 4. Extract (retries elevated via UAC if destination is write-protected)
     send({ stage: 'extracting', percent: 0 });
     await extractZip(tmpPath, destFolder);
 
-    // 4. Patch .prf files with user credentials (retries elevated on EACCES/EPERM)
+    // 5. Patch .prf files with user credentials (retries elevated on EACCES/EPERM)
     await patchPrfFiles(destFolder, name, cid, password, rank, hoppieCode);
     await createHoppieFiles(destFolder, hoppieCode);
     await patchSymbologyFontSize(destFolder, fontSize);
 
-    // 5. Cleanup
+    // 6. Cleanup
     try {
       fs.unlinkSync(tmpPath);
     } catch {
       // ignore cleanup errors
     }
 
-    // 6. Save user config
+    // 7. Save user config
     writeConfig({
       name,
       cid,
@@ -502,7 +581,7 @@ export async function runInstall(
       overwriteSettings,
     });
 
-    // 7. Install selected extras (independently, failures don't abort the rest)
+    // 8. Install selected extras (independently, failures don't abort the rest)
     if (payload.extras.length > 0) {
       send({ stage: 'extras', percent: 0 });
       for (const extraId of payload.extras) {

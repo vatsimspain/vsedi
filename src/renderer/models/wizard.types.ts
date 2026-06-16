@@ -9,6 +9,7 @@ export interface WizardFormData {
   fontSize: 'small' | 'medium' | 'large';
   sectorsFolder: string;
   overwriteSettings: boolean;
+  backupAndCleanSectors: boolean;
   extras: string[];
 }
 
