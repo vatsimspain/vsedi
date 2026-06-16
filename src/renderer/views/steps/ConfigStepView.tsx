@@ -1,32 +1,9 @@
+import { FONT_SIZES } from '../../../const/fontSize';
+import { RANKS } from '../../../const/ranks';
 import { useConfigController } from '../../controllers/ConfigController.controller';
 import { ArrowRightIcon } from '../../icons/ArrowRight.icon';
+import { FolderIcon } from '../../icons/Folder.icon';
 import type { StepProps } from '../../models/wizard.types';
-
-const RANKS = [
-  { value: '', label: 'Selecciona tu rango...' },
-  { value: 'OBS', label: 'OBS, Observador' },
-  { value: 'S1', label: 'S1, Estudiante 1' },
-  { value: 'S2', label: 'S2, Estudiante 2' },
-  { value: 'S3', label: 'S3, Estudiante 3' },
-  { value: 'C1', label: 'C1, Controlador 1' },
-  { value: 'C3', label: 'C3, Controlador 3' },
-  { value: 'I1', label: 'I1, Instructor 1' },
-  { value: 'I3', label: 'I3, Instructor 3' },
-  { value: 'SUP', label: 'SUP, Supervisor' },
-  { value: 'ADM', label: 'ADM, Administrador' },
-];
-
-const FONT_SIZES = [
-  { value: 'small', label: 'Pequeña' },
-  { value: 'medium', label: 'Media' },
-  { value: 'large', label: 'Grande' },
-] as const;
-
-const inputClass =
-  'w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-slate-100 text-sm placeholder-slate-500 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500/20 transition-colors';
-
-const labelClass =
-  'block text-xs font-medium text-slate-400 mb-1.5 uppercase tracking-wider';
 
 export default function ConfigStepView({
   formData,
@@ -36,6 +13,12 @@ export default function ConfigStepView({
 }: StepProps) {
   const { pickSectorsFolder } = useConfigController(setFormData);
 
+  const inputClass =
+    'w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-slate-100 text-sm placeholder-slate-500 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500/20 transition-colors';
+
+  const labelClass =
+    'block text-xs font-medium text-slate-400 mb-1.5 uppercase tracking-wider';
+    
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -173,20 +156,7 @@ export default function ConfigStepView({
               onClick={pickSectorsFolder}
               className="flex items-center gap-2 px-4 py-2.5 bg-slate-700 hover:bg-slate-600 border border-slate-600 border-l-0 rounded-r-lg text-slate-300 text-sm font-medium transition-colors flex-shrink-0"
             >
-              <svg
-                width="15"
-                height="15"
-                viewBox="0 0 16 16"
-                fill="none"
-                aria-hidden
-              >
-                <path
-                  d="M1 3.5A1.5 1.5 0 012.5 2h3.172a1.5 1.5 0 011.06.44l.829.828A1.5 1.5 0 008.62 3.75H13.5A1.5 1.5 0 0115 5.25v7.25A1.5 1.5 0 0113.5 14h-11A1.5 1.5 0 011 12.5v-9z"
-                  stroke="currentColor"
-                  strokeWidth="1.2"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              <FolderIcon />
               Examinar
             </button>
           </div>

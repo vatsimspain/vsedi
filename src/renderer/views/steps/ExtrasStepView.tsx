@@ -1,5 +1,6 @@
 import { EXTRAS } from '../../../const/extras.config';
 import { ArrowRightIcon } from '../../icons/ArrowRight.icon';
+import { CheckMarkIcon } from '../../icons/CheckMark.icon';
 import type { StepProps } from '../../models/wizard.types';
 
 export default function ExtrasStepView({
@@ -53,23 +54,7 @@ export default function ExtrasStepView({
                     : 'border-zinc-500 bg-zinc-700',
                 ].join(' ')}
               >
-                {isSelected && (
-                  <svg
-                    width="10"
-                    height="10"
-                    viewBox="0 0 10 10"
-                    fill="none"
-                    aria-hidden
-                  >
-                    <path
-                      d="M1.5 5l2.5 2.5 4.5-4.5"
-                      stroke="white"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                )}
+                {isSelected && <CheckMarkIcon className="text-white" />}
               </span>
 
               <div className="flex-1 min-w-0">

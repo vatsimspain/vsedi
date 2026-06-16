@@ -6,7 +6,7 @@ import https from 'https';
 import os from 'os';
 import path from 'path';
 import { EXTRAS } from '../const/extras.config';
-import { RATING_MAP } from '../const/ratingMap';
+import { RATING_MAP } from '../const/ranks';
 import type {
   InstallPayload,
   InstallProgress,

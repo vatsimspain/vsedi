@@ -4,6 +4,9 @@ import { ArrowRightIcon } from '../../icons/ArrowRight.icon';
 import type { StepProps } from '../../models/wizard.types';
 import { TickIcon } from '../../icons/TickIcon.icon';
 import { CloseIcon } from '../../icons/Close.icon';
+import { CheckMarkIcon } from '../../icons/CheckMark.icon';
+import { FolderIcon } from '../../icons/Folder.icon';
+import { CheckBadgeIcon } from '../../icons/CheckBadge.icon';
 
 const VERSIONS = [
   {
@@ -185,20 +188,7 @@ export default function EuroscopeStepView({ onNext, onBack }: StepProps) {
             onClick={handleBrowse}
             className="self-start flex items-center gap-2 px-4 py-2.5 bg-zinc-700 hover:bg-zinc-600 active:bg-zinc-800 text-white text-sm font-medium rounded-lg transition-colors"
           >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              aria-hidden
-            >
-              <path
-                d="M2 4.5A1.5 1.5 0 013.5 3h2.086a1.5 1.5 0 011.06.44l.915.915A1.5 1.5 0 008.62 4.5H12.5A1.5 1.5 0 0114 6v5.5A1.5 1.5 0 0112.5 13h-9A1.5 1.5 0 012 11.5v-7z"
-                stroke="currentColor"
-                strokeWidth="1.2"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <FolderIcon />
             Seleccionar EuroScope.exe…
           </button>
           <p className="text-xs text-slate-500">
@@ -211,21 +201,7 @@ export default function EuroscopeStepView({ onNext, onBack }: StepProps) {
         <div className="flex flex-col gap-3">
           <div className="flex items-start gap-3 px-4 py-3.5 rounded-xl border bg-emerald-950/30 border-emerald-700/40">
             <span className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-900/60 border border-emerald-600/50 flex-shrink-0 mt-0.5">
-              <svg
-                width="10"
-                height="10"
-                viewBox="0 0 10 10"
-                fill="none"
-                aria-hidden
-              >
-                <path
-                  d="M1.5 5l2.5 2.5 4.5-4.5"
-                  stroke="#34d399"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              <CheckMarkIcon className="text-emerald-400" />
             </span>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-emerald-400">
@@ -251,20 +227,7 @@ export default function EuroscopeStepView({ onNext, onBack }: StepProps) {
             onClick={handleForget}
             className="self-start flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-red-400/70 hover:text-red-300 hover:bg-red-950/30 border border-transparent hover:border-red-800/40 transition-all"
           >
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 12 12"
-              fill="none"
-              aria-hidden
-            >
-              <path
-                d="M2 2l8 8M10 2l-8 8"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-            </svg>
+            <CloseIcon className="w-3 h-3" />
             Olvidar ruta guardada
           </button>
         </div>
@@ -305,21 +268,7 @@ export default function EuroscopeStepView({ onNext, onBack }: StepProps) {
                     )}
                     {selected && (
                       <span className="flex items-center justify-center flex-shrink-0 w-4 h-4 ml-auto bg-blue-500 rounded-full">
-                        <svg
-                          width="8"
-                          height="8"
-                          viewBox="0 0 8 8"
-                          fill="none"
-                          aria-hidden
-                        >
-                          <path
-                            d="M1 4l2 2 4-4"
-                            stroke="white"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
+                        <CheckBadgeIcon className="text-white" />
                       </span>
                     )}
                   </span>
@@ -373,21 +322,7 @@ export default function EuroscopeStepView({ onNext, onBack }: StepProps) {
           disabled={isWorking}
           className="flex items-center gap-2 px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-900 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-40"
         >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-            aria-hidden
-          >
-            <path
-              d="M13 8H3M7 12l-4-4 4-4"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <ArrowRightIcon className="w-4 h-4 rotate-180" />
           Atrás
         </button>
 
