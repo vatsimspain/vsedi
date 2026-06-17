@@ -100,18 +100,26 @@ export default function WelcomeStepView({ onNext }: StepProps) {
                       key={fir}
                       label={fir}
                       value={latest ? `AIRAC ${latest.cycle}` : 'Sin datos'}
-                      ok={!!latest}
+                      status={latest ? 'warn' : 'error'}
                     />
                   );
                 })
               : githubAiracs!.map((entry) => {
-                  const matched = installedAiracs[entry.fir]?.find((e) => e.date === entry.date);
+                  const entries = installedAiracs[entry.fir];
+                  const matched = entries?.find((e) => e.date === entry.date);
+                  const latest = entries?.[entries.length - 1];
+                  const status = matched ? 'ok' : latest ? 'warn' : 'error';
+                  const value = matched
+                    ? `AIRAC ${matched.cycle}`
+                    : latest
+                      ? `Desactualizado (${latest.cycle})`
+                      : 'No instalado';
                   return (
                     <StatusCard
                       key={entry.fir}
                       label={entry.fir}
-                      value={matched ? `AIRAC ${matched.cycle}` : `-`}
-                      ok={!!matched}
+                      value={value}
+                      status={status}
                     />
                   );
                 })}
