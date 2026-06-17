@@ -1,5 +1,6 @@
 export interface InstallPayload {
   overwriteSettings: boolean;
+  backupAndCleanSectors: boolean;
   destFolder: string;
   name: string;
   cid: string;
@@ -19,6 +20,7 @@ export interface SavedConfig {
   fontSize?: 'small' | 'medium' | 'large';
   sectorsFolder?: string;
   overwriteSettings?: boolean;
+  backupAndCleanSectors?: boolean;
   euroscopePath?: string;
 }
 
@@ -27,7 +29,7 @@ export interface InstallResult {
   error?: string;
 }
 
-export type InstallStage = 'fetching' | 'downloading' | 'extracting' | 'extras' | 'done';
+export type InstallStage = 'fetching' | 'downloading' | 'backup' | 'extracting' | 'extras' | 'done';
 
 export type ExtraInstallStatus = 'running' | 'done' | 'error';
 

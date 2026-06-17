@@ -1,4 +1,4 @@
-export type InstallStage = 'fetching' | 'downloading' | 'extracting' | 'extras' | 'done';
+export type InstallStage = 'fetching' | 'downloading' | 'backup' | 'extracting' | 'extras' | 'done';
 
 export type ExtraInstallStatus = 'running' | 'done' | 'error';
 
@@ -17,6 +17,7 @@ export interface InstallResult {
 
 export interface InstallPayload {
   overwriteSettings: boolean;
+  backupAndCleanSectors: boolean;
   destFolder: string;
   name: string;
   cid: string;

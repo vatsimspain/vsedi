@@ -1,8 +1,16 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useInstallation } from '../../hooks/useInstallation.hook';
 import type { StepProps } from '../../models/wizard.types';
 import { EXTRAS } from '../../../const/extras.config';
 import { TickIcon } from '../../icons/TickIcon.icon';
+import { CheckMarkIcon } from '../../icons/CheckMark.icon';
+import { CloseIcon } from '../../icons/Close.icon';
+import { ArrowRightIcon } from '../../icons/ArrowRight.icon';
+
+const BACKUP_TASK = {
+  label: 'Haciendo backup y limpiando sectores antiguos',
+  stage: 'backup',
+} as const;
 
 const BASE_TASKS = [
   { label: 'Obteniendo información del release', stage: 'fetching' },
@@ -10,24 +18,23 @@ const BASE_TASKS = [
   { label: 'Instalando en EuroScope', stage: 'extracting' },
 ] as const;
 
-type BaseStage = (typeof BASE_TASKS)[number]['stage'];
-
-const BASE_STAGE_INDEX: Record<BaseStage, number> = {
-  fetching: 0,
-  downloading: 1,
-  extracting: 2,
-};
-
 function overallProgress(
   stage: string,
   dlPercent: number,
   doneExtras: number,
   totalExtras: number,
+  hasBackup: boolean,
 ): number {
   if (stage === 'idle') return 0;
   if (stage === 'fetching') return 3;
-  if (stage === 'downloading') return 5 + dlPercent * 0.8;
-  if (stage === 'extracting') return 87;
+  if (hasBackup) {
+    if (stage === 'downloading') return 5 + dlPercent * 0.6;
+    if (stage === 'backup') return 70;
+    if (stage === 'extracting') return 85;
+  } else {
+    if (stage === 'downloading') return 5 + dlPercent * 0.8;
+    if (stage === 'extracting') return 87;
+  }
   if (stage === 'extras') {
     const extraShare = totalExtras > 0 ? (doneExtras / totalExtras) * 10 : 0;
     return 90 + extraShare;
@@ -47,10 +54,17 @@ export default function ProgressStepView({
   const hasError = status === 'error';
 
   const selectedExtras = EXTRAS.filter((e) => formData.extras.includes(e.id));
+  const hasBackup = formData.backupAndCleanSectors;
+
+  const tasks = useMemo(() => {
+    if (!hasBackup) return BASE_TASKS;
+    return [BASE_TASKS[0], BASE_TASKS[1], BACKUP_TASK, BASE_TASKS[2]];
+  }, [hasBackup]);
 
   useEffect(() => {
     install({
       overwriteSettings: formData.overwriteSettings,
+      backupAndCleanSectors: formData.backupAndCleanSectors,
       destFolder: formData.sectorsFolder,
       name: formData.name,
       cid: formData.cid,
@@ -71,12 +85,14 @@ export default function ProgressStepView({
     progress,
     doneExtras,
     selectedExtras.length,
+    hasBackup,
   );
 
+  const stageIndex = tasks.findIndex((t) => t.stage === status);
   const baseCompletedCount =
     status === 'done' || status === 'extras'
-      ? BASE_TASKS.length
-      : (BASE_STAGE_INDEX[status as BaseStage] ?? 0);
+      ? tasks.length
+      : Math.max(stageIndex, 0);
 
   return (
     <div className="flex flex-col gap-6">
@@ -119,7 +135,7 @@ export default function ProgressStepView({
           </div>
 
           <ul className="flex flex-col gap-2.5">
-            {BASE_TASKS.map((task, i) => {
+            {tasks.map((task, i) => {
               const isComplete = i < baseCompletedCount;
               const isActive =
                 !isComplete &&
@@ -181,38 +197,11 @@ export default function ProgressStepView({
                   <span className="flex items-center justify-center flex-shrink-0 w-5 h-5 mt-0.5">
                     {isComplete ? (
                       <span className="flex items-center justify-center w-5 h-5 border rounded-full bg-emerald-900/60 border-emerald-600/50">
-                        <svg
-                          width="10"
-                          height="10"
-                          viewBox="0 0 10 10"
-                          fill="none"
-                          aria-hidden
-                        >
-                          <path
-                            d="M1.5 5l2.5 2.5 4.5-4.5"
-                            stroke="#34d399"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
+                        <CheckMarkIcon className="text-emerald-400" />
                       </span>
                     ) : isError ? (
                       <span className="flex items-center justify-center w-5 h-5 border rounded-full bg-red-900/60 border-red-600/50">
-                        <svg
-                          width="10"
-                          height="10"
-                          viewBox="0 0 10 10"
-                          fill="none"
-                          aria-hidden
-                        >
-                          <path
-                            d="M2 2l6 6M8 2L2 8"
-                            stroke="#f87171"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                          />
-                        </svg>
+                        <CloseIcon className="w-2.5 h-2.5 text-red-400" />
                       </span>
                     ) : isActive ? (
                       <div className="w-4 h-4 border-2 rounded-full border-slate-600 border-t-zinc-300 animate-spin" />
@@ -261,21 +250,7 @@ export default function ProgressStepView({
             onClick={onBack}
             className="flex items-center gap-2 px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-900 text-white text-sm font-medium rounded-lg transition-colors"
           >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              aria-hidden
-            >
-              <path
-                d="M13 8H3M7 12l-4-4 4-4"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <ArrowRightIcon className="w-4 h-4 rotate-180" />
             Atrás
           </button>
           {done && (
@@ -305,21 +280,7 @@ function TaskIcon({
     <span className="flex items-center justify-center flex-shrink-0 w-5 h-5">
       {isComplete ? (
         <span className="flex items-center justify-center w-5 h-5 border rounded-full bg-emerald-900/60 border-emerald-600/50">
-          <svg
-            width="10"
-            height="10"
-            viewBox="0 0 10 10"
-            fill="none"
-            aria-hidden
-          >
-            <path
-              d="M1.5 5l2.5 2.5 4.5-4.5"
-              stroke="#34d399"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <CheckMarkIcon className="text-emerald-400" />
         </span>
       ) : isActive ? (
         <div className="w-4 h-4 border-2 rounded-full border-slate-600 border-t-zinc-300 animate-spin" />

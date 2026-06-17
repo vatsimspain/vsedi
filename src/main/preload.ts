@@ -1,6 +1,7 @@
 // Disable no-unused-vars, broken for spread args
 /* eslint no-unused-vars: off */
 import { app, contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
+import type { InstallPayload } from '../renderer/models/install.types';
 
 export type Channels = 'ipc-example' | 'install:progress' | 'euroscope:install:progress' | 'ultra:secret';
 
@@ -27,7 +28,7 @@ const electronHandler = {
       ipcRenderer.invoke('dialog:openFolder'),
   },
   install: {
-    run: (payload: Record<string, unknown>) =>
+    run: (payload: InstallPayload) =>
       ipcRenderer.invoke('install:run', payload),
   },
   config: {

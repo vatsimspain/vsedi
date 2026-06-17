@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { CloseIcon } from '../../icons/Close.icon';
 import { HappyFaceIcon } from '../../icons/HappyFace.icon';
+import { SuccessCheckIcon } from '../../icons/SuccessCheck.icon';
 import type { StepProps } from '../../models/wizard.types';
 
 export default function FinalStepView(_: StepProps) {
@@ -18,15 +19,7 @@ export default function FinalStepView(_: StepProps) {
   return (
     <div className="flex flex-col items-center justify-center h-full gap-8 py-8 text-center">
       <div className="flex items-center justify-center w-20 h-20 border rounded-full bg-emerald-900/50 border-emerald-600/40">
-        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden>
-          <path
-            d="M8 20l8 8 16-16"
-            stroke="#34d399"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+        <SuccessCheckIcon className="text-emerald-400" />
       </div>
 
       <div className="max-w-sm">
