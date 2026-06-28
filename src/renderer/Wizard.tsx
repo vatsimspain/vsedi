@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { WizardStep } from './models/wizard.types';
 import { useWizardController } from './controllers/WizardController.controller';
 import WizardView from './views/WizardView';
@@ -9,17 +10,19 @@ import ExtrasStepView from './views/steps/ExtrasStepView';
 import ProgressStepView from './views/steps/ProgressStepView';
 import FinalStepView from './views/steps/FinalStepView';
 
-const STEPS: WizardStep[] = [
-  { id: 'welcome', title: 'Bienvenida', component: WelcomeStepView },
-  { id: 'changelog', title: 'Novedades', component: ChangelogStepView },
-  { id: 'euroscope', title: 'EuroScope', component: EuroscopeStepView },
-  { id: 'config', title: 'Configuración', component: ConfigStepView },
-  { id: 'extras', title: 'Extras', component: ExtrasStepView },
-  { id: 'install', title: 'Instalación', component: ProgressStepView },
-  { id: 'final', title: 'Finalizar', component: FinalStepView },
-];
-
 export default function Wizard() {
+  const { t } = useTranslation();
+
+  const STEPS: WizardStep[] = [
+    { id: 'welcome', title: t('steps.welcome'), component: WelcomeStepView },
+    { id: 'changelog', title: t('steps.changelog'), component: ChangelogStepView },
+    { id: 'euroscope', title: t('steps.euroscope'), component: EuroscopeStepView },
+    { id: 'config', title: t('steps.config'), component: ConfigStepView },
+    { id: 'extras', title: t('steps.extras'), component: ExtrasStepView },
+    { id: 'install', title: t('steps.install'), component: ProgressStepView },
+    { id: 'final', title: t('steps.final'), component: FinalStepView },
+  ];
+
   const { currentStep, formData, setFormData, goNext, goBack } =
     useWizardController(STEPS);
 

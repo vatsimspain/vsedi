@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ArrowRightIcon } from '../../icons/ArrowRight.icon';
@@ -9,28 +10,28 @@ const GITHUB_API =
 
 const MD_COMPONENTS = {
   h1: ({ children }: { children: React.ReactNode }) => (
-    <h1 className="text-xl font-bold text-slate-100 mt-4 mb-2 first:mt-0">{children}</h1>
+    <h1 className="mt-4 mb-2 text-xl font-bold text-slate-100 first:mt-0">{children}</h1>
   ),
   h2: ({ children }: { children: React.ReactNode }) => (
-    <h2 className="text-lg font-semibold text-slate-100 mt-4 mb-2 first:mt-0">{children}</h2>
+    <h2 className="mt-4 mb-2 text-lg font-semibold text-slate-100 first:mt-0">{children}</h2>
   ),
   h3: ({ children }: { children: React.ReactNode }) => (
-    <h3 className="text-base font-semibold text-slate-200 mt-3 mb-1">{children}</h3>
+    <h3 className="mt-3 mb-1 text-base font-semibold text-slate-200">{children}</h3>
   ),
   p: ({ children }: { children: React.ReactNode }) => (
     <p className="mb-3 last:mb-0">{children}</p>
   ),
   ul: ({ children }: { children: React.ReactNode }) => (
-    <ul className="list-disc list-inside mb-3 space-y-1 text-slate-300">{children}</ul>
+    <ul className="mb-3 space-y-1 list-disc list-inside text-slate-300">{children}</ul>
   ),
   ol: ({ children }: { children: React.ReactNode }) => (
-    <ol className="list-decimal list-inside mb-3 space-y-1 text-slate-300">{children}</ol>
+    <ol className="mb-3 space-y-1 list-decimal list-inside text-slate-300">{children}</ol>
   ),
   li: ({ children }: { children: React.ReactNode }) => (
     <li className="leading-relaxed">{children}</li>
   ),
   a: ({ href, children }: { href?: string; children: React.ReactNode }) => (
-    <a href={href} className="text-blue-400 hover:text-blue-300 underline" target="_blank" rel="noreferrer">{children}</a>
+    <a href={href} className="text-blue-400 underline hover:text-blue-300" target="_blank" rel="noreferrer">{children}</a>
   ),
   strong: ({ children }: { children: React.ReactNode }) => (
     <strong className="font-semibold text-slate-100">{children}</strong>
@@ -39,13 +40,14 @@ const MD_COMPONENTS = {
     <code className="bg-zinc-800 text-slate-300 px-1 py-0.5 rounded text-xs font-mono">{children}</code>
   ),
   hr: () => (
-    <hr className="border-slate-700/60 my-4" />
+    <hr className="my-4 border-slate-700/60" />
   ),
 };
 
 type ColumnState = { content: string | null; error: boolean };
 
 export default function ChangelogStepView({ onNext, onBack }: StepProps) {
+  const { t } = useTranslation();
   const [vsedi, setVsedi] = useState<ColumnState>({ content: null, error: false });
   const [operaciones, setOperaciones] = useState<ColumnState>({ content: null, error: false });
 
@@ -83,9 +85,9 @@ export default function ChangelogStepView({ onNext, onBack }: StepProps) {
     })();
   }, []);
 
-  function renderColumn(state: ColumnState, loadingText: string) {
-    if (state.error) return <p className="text-red-400">No se pudieron cargar las novedades.</p>;
-    if (state.content === null) return <p className="text-slate-500 animate-pulse">{loadingText}</p>;
+  function renderColumn(state: ColumnState) {
+    if (state.error) return <p className="text-red-400">{t('changelog.loadError')}</p>;
+    if (state.content === null) return <p className="text-slate-500 animate-pulse">{t('changelog.loading')}</p>;
     return (
       <ReactMarkdown remarkPlugins={[remarkGfm]} components={MD_COMPONENTS}>
         {state.content}
@@ -97,24 +99,24 @@ export default function ChangelogStepView({ onNext, onBack }: StepProps) {
     <div className="flex flex-col h-full gap-6">
       <div>
         <h1 className="text-2xl font-semibold leading-tight font-akira text-slate-100">
-          Novedades
+          {t('changelog.title')}
         </h1>
         <p className="mt-1 text-sm leading-relaxed text-slate-400">
-          Cambios en VSEDI y en los sectores de Operaciones para este AIRAC.
+          {t('changelog.subtitle')}
         </p>
       </div>
 
-      <div className="flex-1 min-h-0 grid grid-cols-2 gap-4">
+      <div className="grid flex-1 min-h-0 grid-cols-2 gap-4">
         <div className="flex flex-col min-h-0">
           <p className="mb-2 text-xs font-medium tracking-wider uppercase text-slate-500">VSEDI</p>
-          <div className="flex-1 overflow-y-auto rounded-xl bg-zinc-900/70 border border-slate-700/40 px-5 py-4 text-sm text-slate-300 leading-relaxed">
-            {renderColumn(vsedi, 'Cargando…')}
+          <div className="flex-1 px-5 py-4 overflow-y-auto text-sm leading-relaxed border rounded-xl bg-zinc-900/70 border-slate-700/40 text-slate-300">
+            {renderColumn(vsedi)}
           </div>
         </div>
         <div className="flex flex-col min-h-0">
-          <p className="mb-2 text-xs font-medium tracking-wider uppercase text-slate-500">Operaciones</p>
-          <div className="flex-1 overflow-y-auto rounded-xl bg-zinc-900/70 border border-slate-700/40 px-5 py-4 text-sm text-slate-300 leading-relaxed">
-            {renderColumn(operaciones, 'Cargando…')}
+          <p className="mb-2 text-xs font-medium tracking-wider uppercase text-slate-500">Airac</p>
+          <div className="flex-1 px-5 py-4 overflow-y-auto text-sm leading-relaxed border rounded-xl bg-zinc-900/70 border-slate-700/40 text-slate-300">
+            {renderColumn(operaciones)}
           </div>
         </div>
       </div>
@@ -126,7 +128,7 @@ export default function ChangelogStepView({ onNext, onBack }: StepProps) {
           className="flex items-center gap-2 px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-900 text-white text-sm font-medium rounded-lg transition-colors"
         >
           <ArrowRightIcon className="rotate-180" />
-          Atrás
+          {t('nav.back')}
         </button>
 
         <button
@@ -134,7 +136,7 @@ export default function ChangelogStepView({ onNext, onBack }: StepProps) {
           onClick={onNext}
           className="flex items-center gap-2 px-5 py-2.5 bg-zinc-700 hover:bg-zinc-600 active:bg-zinc-800 text-white text-sm font-medium rounded-lg transition-colors"
         >
-          Continuar
+          {t('nav.continue')}
           <ArrowRightIcon />
         </button>
       </div>

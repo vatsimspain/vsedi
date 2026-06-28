@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type UpdateState = 'idle' | 'available' | 'downloaded' | 'error';
 
 export default function UpdateBanner() {
+  const { t } = useTranslation();
   const [state, setState] = useState<UpdateState>('idle');
   const [version, setVersion] = useState<string>('');
   const [percent, setPercent] = useState<number>(0);
@@ -44,10 +46,15 @@ export default function UpdateBanner() {
     >
       <span>
         {state === 'available' &&
-          `Descargando actualización${version ? ` v${version}` : ''}... ${percent > 0 ? `${percent}%` : ''}`}
+          t('update.downloading', {
+            version: version ? ` v${version}` : '',
+            percent: percent > 0 ? `${percent}%` : '',
+          })}
         {state === 'downloaded' &&
-          `Actualización lista${version ? ` (v${version})` : ''}, reinicia para aplicarla`}
-        {state === 'error' && `Error en la actualización: ${errorMsg}`}
+          t('update.downloaded', {
+            version: version ? ` (v${version})` : '',
+          })}
+        {state === 'error' && t('update.error', { message: errorMsg })}
       </span>
       {state === 'downloaded' && (
         <button
@@ -55,7 +62,7 @@ export default function UpdateBanner() {
           onClick={() => window.electron.update.install()}
           className="ml-4 px-3 py-1 bg-white text-green-700 font-semibold rounded hover:bg-green-50 transition-colors"
         >
-          Reiniciar ahora
+          {t('update.restart')}
         </button>
       )}
     </div>

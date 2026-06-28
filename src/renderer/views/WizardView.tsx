@@ -1,7 +1,9 @@
+import { useTranslation } from 'react-i18next';
 import type { StepProps, WizardStep } from '../models/wizard.types';
 import StepIndicator from '../components/StepIndicator.component';
 import UpdateBanner from '../components/UpdateBanner.component';
 import OpenSourceBanner from '../components/OpenSourceBanner.component';
+import LanguageToggle from '../components/LanguageToggle.component';
 import WhiteLogo from '../../../assets/logo/WhiteLogo.png';
 import WhiteLogoAlt from '../../../assets/logo/WhiteLogoAlt.png';
 import Discord from '../../../assets/media/discord.png';
@@ -28,6 +30,7 @@ type Props = {
 };
 
 export default function WizardView({ steps, currentStep, stepProps }: Props) {
+  const { t } = useTranslation();
   const [ultraSecret, setUltraSecret] = useState(false);
   const StepComponent = steps[currentStep].component;
 
@@ -62,6 +65,7 @@ export default function WizardView({ steps, currentStep, stepProps }: Props) {
             className="w-32"
           />
           <StepIndicator steps={steps} current={currentStep} />
+          <LanguageToggle />
         </div>
 
         <div
@@ -151,7 +155,7 @@ export default function WizardView({ steps, currentStep, stepProps }: Props) {
           >
             VATSIM Spain 2026
           </a>{' '}
-          - Hecho con ❤️ por el dept. de Web
+          - {t('footer.made_with')}
         </p>
         <div className="flex flex-row items-end gap-1">
           <a

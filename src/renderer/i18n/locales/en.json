@@ -1,0 +1,150 @@
+{
+  "steps": {
+    "welcome": "Welcome",
+    "changelog": "Changelog",
+    "euroscope": "EuroScope",
+    "config": "Configuration",
+    "extras": "Extras",
+    "install": "Installation",
+    "final": "Finish"
+  },
+  "nav": {
+    "back": "Back",
+    "continue": "Continue",
+    "skip": "Skip",
+    "start": "Get started",
+    "finish": "Finish"
+  },
+  "welcome": {
+    "title": "Welcome to VSEDI",
+    "titleWithName": "Welcome to VSEDI, {{name}}",
+    "subtitle": "This wizard will guide you through the configuration of AIRACs, plugins and other specific settings for VATSIM Spain controllers.",
+    "airacByFir": "AIRAC by FIR",
+    "outdated": "Outdated ({{cycle}})",
+    "notInstalled": "Not installed",
+    "noData": "No data",
+    "lastSectorsFolder": "Last sectors folder"
+  },
+  "changelog": {
+    "title": "Changelog",
+    "subtitle": "Changes in VSEDI and the Operations sectors for this AIRAC.",
+    "loading": "Loading…",
+    "loadError": "Could not load the changelog."
+  },
+  "euroscope": {
+    "title": "EuroScope",
+    "subtitle": "EuroScope is the VATSIM radar client needed to connect to the network as a controller.",
+    "loading": "Loading...",
+    "ask_question": "Do you already have EuroScope installed?",
+    "ask_yes": "Yes, I have it",
+    "ask_yes_hint": "Point to where EuroScope.exe is",
+    "ask_no": "No, install now",
+    "ask_no_hint": "Download and install EuroScope",
+    "pick_prompt_pre": "Select the file",
+    "pick_prompt_post": "on your computer.",
+    "pick_button": "Select EuroScope.exe…",
+    "pick_default_path": "Default path: C:\\Program Files (x86)\\EuroScope",
+    "found_configured": "EuroScope configured",
+    "found_forget": "Forget saved path",
+    "install_select_version": "Select the version to install:",
+    "install_recommended_badge": "Recommended",
+    "install_button": "Install v{{version}}",
+    "downloading": "Downloading... {{percent}}%",
+    "installing": "Installing EuroScope...",
+    "install_prompt": "The EuroScope installer has opened. Complete the installation and close it to continue.",
+    "version_recommended": "Recommended version by VATSIM Spain",
+    "version_latest": "Latest available version",
+    "error_unknown": "Unknown error"
+  },
+  "config": {
+    "title": "Configuration data",
+    "subtitle": "Enter your VATSIM credentials and preferences.",
+    "cid": "VATSIM CID",
+    "cid_placeholder": "e.g. 1234567",
+    "password": "Password",
+    "name": "Network name",
+    "name_placeholder": "e.g. John Doe",
+    "hoppie": "Hoppie Code",
+    "hoppie_placeholder": "Your Hoppie logon code",
+    "rank": "Rating",
+    "font_size": "Font size",
+    "sectors_folder": "EuroScope sectors folder",
+    "sectors_placeholder": "Select the sectors folder...",
+    "browse": "Browse",
+    "overwrite_label": "Overwrite settings",
+    "overwrite_desc": "Your current configuration will be erased and the installed sectors will use default settings",
+    "backup_label": "Backup and clean old sectors",
+    "backup_desc": "A .zip copy of your EuroScope folder (VSEDI_Backup) will be made and old .prf, .sct, .ese and .rwy files from LECB, LECM, GCCC and LEXX will be removed before installing"
+  },
+  "extras": {
+    "title": "Extras",
+    "subtitle": "Select the additional tools you want to install alongside the sectors. You can skip this step if you don't need any.",
+    "install_one": "Install 1 extra",
+    "install_many": "Install {{count}} extras",
+    "continue_without": "Continue without extras"
+  },
+  "progress": {
+    "title_ready": "Ready to control!",
+    "title_error": "Error during installation",
+    "title_progress": "Setting up your EuroScope...",
+    "subtitle_ready": "EuroScope has been configured correctly. You can now start controlling.",
+    "subtitle_error": "An error occurred. Check the data and try again.",
+    "subtitle_progress": "Please wait while we configure the system.",
+    "progress_label": "Progress",
+    "task_fetching": "Fetching release information",
+    "task_downloading": "Downloading files",
+    "task_backup": "Backing up and cleaning old sectors",
+    "task_extracting": "Installing in EuroScope",
+    "extra_installer_open": "The installer has opened. Configure it and close it to continue.",
+    "extra_install_failed": "Could not install. You can do it manually later."
+  },
+  "final": {
+    "title": "All done!",
+    "subtitle": "EuroScope has been configured correctly. You can now close this wizard and start controlling on VATSIM Spain.",
+    "launch": "Launch EuroScope",
+    "close": "Close"
+  },
+  "update": {
+    "downloading": "Downloading update{{version}}... {{percent}}",
+    "downloaded": "Update ready{{version}}, restart to apply it",
+    "error": "Update error: {{message}}",
+    "restart": "Restart now"
+  },
+  "opensource": {
+    "text_pre": "VSEDI is",
+    "link_label": "open source",
+    "text_mid": ". If you find an issue, open a GitHub issue or contact",
+    "dismiss": "Dismiss"
+  },
+  "footer": {
+    "made_with": "Made with ❤️ by the Web dept."
+  },
+  "ranks": {
+    "placeholder": "Select your rating...",
+    "OBS": "OBS, Observer",
+    "S1": "S1, Student 1",
+    "S2": "S2, Student 2",
+    "S3": "S3, Student 3",
+    "C1": "C1, Controller 1",
+    "C3": "C3, Controller 3",
+    "I1": "I1, Instructor 1",
+    "I3": "I3, Instructor 3",
+    "SUP": "SUP, Supervisor",
+    "ADM": "ADM, Administrator"
+  },
+  "font_sizes": {
+    "small": "Small",
+    "medium": "Medium",
+    "large": "Large"
+  },
+  "extras_config": {
+    "vspv_name": "VSPV Font",
+    "vspv_desc": "This font will be used by the SACTA plugin to resemble real radars as closely as possible.",
+    "trackaudio_name": "TrackAudio",
+    "trackaudio_desc": "Modern audio client for VATSIM. Replaces Audio for VATSIM with better audio quality and lower latency.",
+    "trackaudio_version": "Latest stable version",
+    "vatis_name": "vATIS",
+    "vatis_desc": "Tool for generating and broadcasting digital ATIS information on the VATSIM network.",
+    "vatis_version": "Latest version"
+  }
+}

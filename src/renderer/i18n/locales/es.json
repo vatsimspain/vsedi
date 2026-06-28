@@ -1,0 +1,150 @@
+{
+  "steps": {
+    "welcome": "Bienvenida",
+    "changelog": "Novedades",
+    "euroscope": "EuroScope",
+    "config": "Configuración",
+    "extras": "Extras",
+    "install": "Instalación",
+    "final": "Finalizar"
+  },
+  "nav": {
+    "back": "Atrás",
+    "continue": "Continuar",
+    "skip": "Omitir",
+    "start": "Comenzar",
+    "finish": "Finalizar"
+  },
+  "welcome": {
+    "title": "Bienvenido a VSEDI",
+    "titleWithName": "Bienvenido a VSEDI, {{name}}",
+    "subtitle": "Este asistente te guiará en la configuración de AIRACs, plugins y otras configuraciones específicas para los controladores de VATSIM Spain.",
+    "airacByFir": "AIRAC por FIR",
+    "outdated": "Desactualizado ({{cycle}})",
+    "notInstalled": "No instalado",
+    "noData": "Sin datos",
+    "lastSectorsFolder": "Última carpeta de sectores"
+  },
+  "changelog": {
+    "title": "Novedades",
+    "subtitle": "Cambios en VSEDI y en los sectores de Operaciones para este AIRAC.",
+    "loading": "Cargando…",
+    "loadError": "No se pudieron cargar las novedades."
+  },
+  "euroscope": {
+    "title": "EuroScope",
+    "subtitle": "EuroScope es el cliente radar de VATSIM necesario para conectarte a la red como controlador.",
+    "loading": "Cargando...",
+    "ask_question": "¿Ya tienes EuroScope instalado en tu equipo?",
+    "ask_yes": "Sí, ya lo tengo",
+    "ask_yes_hint": "Indicar dónde está EuroScope.exe",
+    "ask_no": "No, instalar ahora",
+    "ask_no_hint": "Descargar e instalar EuroScope",
+    "pick_prompt_pre": "Selecciona el archivo",
+    "pick_prompt_post": "en tu equipo.",
+    "pick_button": "Seleccionar EuroScope.exe…",
+    "pick_default_path": "Ruta por defecto: C:\\Program Files (x86)\\EuroScope",
+    "found_configured": "EuroScope configurado",
+    "found_forget": "Olvidar ruta guardada",
+    "install_select_version": "Selecciona la versión a instalar:",
+    "install_recommended_badge": "Recomendada",
+    "install_button": "Instalar v{{version}}",
+    "downloading": "Descargando... {{percent}}%",
+    "installing": "Instalando EuroScope...",
+    "install_prompt": "El instalador de EuroScope se ha abierto. Completa la instalación y ciérralo para continuar.",
+    "version_recommended": "Versión recomendada por VATSIM Spain",
+    "version_latest": "Última versión disponible",
+    "error_unknown": "Error desconocido"
+  },
+  "config": {
+    "title": "Datos de configuración",
+    "subtitle": "Introduce tus credenciales y preferencias de VATSIM.",
+    "cid": "CID de VATSIM",
+    "cid_placeholder": "Ej. 1234567",
+    "password": "Contraseña",
+    "name": "Nombre en red",
+    "name_placeholder": "Ej. Pepe Viyuela",
+    "hoppie": "Código Hoppie",
+    "hoppie_placeholder": "Tu código logon de Hoppie",
+    "rank": "Rango",
+    "font_size": "Tipo de fuente",
+    "sectors_folder": "Carpeta de sectores de Euroscope",
+    "sectors_placeholder": "Selecciona la carpeta de sectores...",
+    "browse": "Examinar",
+    "overwrite_label": "Sobreescribir settings",
+    "overwrite_desc": "Tu configuración actual se borrará y los sectores instalados tendrán los ajustes por defecto",
+    "backup_label": "Backup y limpieza de sectores antiguos",
+    "backup_desc": "Se hará una copia .zip de tu carpeta de Euroscope (VSEDI_Backup) y se eliminarán los .prf, .sct, .ese y .rwy antiguos de LECB, LECM, GCCC y LEXX antes de instalar"
+  },
+  "extras": {
+    "title": "Extras",
+    "subtitle": "Selecciona las herramientas adicionales que quieras instalar junto con los sectores. Puedes omitir este paso si no necesitas ninguna.",
+    "install_one": "Instalar 1 extra",
+    "install_many": "Instalar {{count}} extras",
+    "continue_without": "Continuar sin extras"
+  },
+  "progress": {
+    "title_ready": "¡Listo para controlar!",
+    "title_error": "Error durante la instalación",
+    "title_progress": "Configurando tu EuroScope...",
+    "subtitle_ready": "Euroscope se ha configurado correctamente. Ya puedes empezar a controlar.",
+    "subtitle_error": "Ha ocurrido un error. Revisa los datos e inténtalo de nuevo.",
+    "subtitle_progress": "Por favor espera mientras configuramos el sistema.",
+    "progress_label": "Progreso",
+    "task_fetching": "Obteniendo información del release",
+    "task_downloading": "Descargando archivos",
+    "task_backup": "Haciendo backup y limpiando sectores antiguos",
+    "task_extracting": "Instalando en EuroScope",
+    "extra_installer_open": "El instalador se ha abierto. Configúralo y ciérralo para continuar.",
+    "extra_install_failed": "No se pudo instalar. Puedes hacerlo manualmente después."
+  },
+  "final": {
+    "title": "¡Todo listo!",
+    "subtitle": "EuroScope ha sido configurado correctamente. Ya puedes cerrar este asistente y comenzar a controlar en VATSIM Spain.",
+    "launch": "Ejecutar EuroScope",
+    "close": "Cerrar"
+  },
+  "update": {
+    "downloading": "Descargando actualización{{version}}... {{percent}}",
+    "downloaded": "Actualización lista{{version}}, reinicia para aplicarla",
+    "error": "Error en la actualización: {{message}}",
+    "restart": "Reiniciar ahora"
+  },
+  "opensource": {
+    "text_pre": "VSEDI es",
+    "link_label": "código abierto",
+    "text_mid": ". Si encuentras un problema, abre un issue en GitHub o contacta a",
+    "dismiss": "Cerrar aviso"
+  },
+  "footer": {
+    "made_with": "Hecho con ❤️ por el dept. de Web"
+  },
+  "ranks": {
+    "placeholder": "Selecciona tu rango...",
+    "OBS": "OBS, Observador",
+    "S1": "S1, Estudiante 1",
+    "S2": "S2, Estudiante 2",
+    "S3": "S3, Estudiante 3",
+    "C1": "C1, Controlador 1",
+    "C3": "C3, Controlador 3",
+    "I1": "I1, Instructor 1",
+    "I3": "I3, Instructor 3",
+    "SUP": "SUP, Supervisor",
+    "ADM": "ADM, Administrador"
+  },
+  "font_sizes": {
+    "small": "Pequeña",
+    "medium": "Media",
+    "large": "Grande"
+  },
+  "extras_config": {
+    "vspv_name": "Fuente VSPV",
+    "vspv_desc": "Esta fuente será usada por el plugin SACTA para asemejarse lo máximo posible a los radares reales.",
+    "trackaudio_name": "TrackAudio",
+    "trackaudio_desc": "Cliente de audio moderno para VATSIM. Reemplaza a Audio for VATSIM con mejor calidad de audio y menor latencia.",
+    "trackaudio_version": "Última versión estable",
+    "vatis_name": "vATIS",
+    "vatis_desc": "Herramienta para generar y emitir información ATIS digital en la red VATSIM.",
+    "vatis_version": "Última versión"
+  }
+}
