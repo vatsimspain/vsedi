@@ -29,7 +29,9 @@
     "title": "Changelog",
     "subtitle": "Changes in VSEDI and the Operations sectors for this AIRAC.",
     "loading": "Loading…",
-    "loadError": "Could not load the changelog."
+    "loadError": "Could not load the changelog.",
+    "vsedi": "VSEDI (Sorry, only in Spanish! =D)",
+    "airac": "Airac (Sorry, only in Spanish! :P)"
   },
   "euroscope": {
     "title": "EuroScope",
@@ -65,12 +67,12 @@
     "name": "Network name",
     "name_placeholder": "e.g. John Doe",
     "hoppie": "Hoppie Code",
-    "hoppie_placeholder": "Your Hoppie logon code",
+    "hoppie_placeholder": "Ej. t76MKHBavE2r44c",
     "rank": "Rating",
     "font_size": "Font size",
     "sectors_folder": "EuroScope sectors folder",
     "sectors_placeholder": "Select the sectors folder...",
-    "browse": "Browse",
+   "sectors_desc": "This folder contains the EuroScope sector files. By default, it is located at C:\\Users\\[user]\\AppData\\Roaming\\EuroScope. You can use the default location or choose a different folder where you want to install the files. When starting EuroScope, you will need to open the .prf file from this folder.",
     "overwrite_label": "Overwrite settings",
     "overwrite_desc": "Your current configuration will be erased and the installed sectors will use default settings",
     "backup_label": "Backup and clean old sectors",

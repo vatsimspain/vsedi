@@ -5,6 +5,7 @@ import { useConfigController } from '../../controllers/ConfigController.controll
 import { ArrowRightIcon } from '../../icons/ArrowRight.icon';
 import { FolderIcon } from '../../icons/Folder.icon';
 import type { StepProps } from '../../models/wizard.types';
+import { InfoIcon } from '../../icons/Info.icon';
 
 export default function ConfigStepView({
   formData,
@@ -85,7 +86,7 @@ export default function ConfigStepView({
           <input
             id="hoppieCode"
             className={inputClass}
-            type="text"
+            type="password"
             placeholder={t('config.hoppie_placeholder')}
             value={formData.hoppieCode}
             onChange={(e) => setFormData({ hoppieCode: e.target.value })}
@@ -140,7 +141,7 @@ export default function ConfigStepView({
           </div>
         </div>
 
-        <div className="col-span-2">
+        <div className="flex flex-col col-span-2 gap-2">
           <label className={labelClass} htmlFor="sectorsFolder">
             {t('config.sectors_folder')}
           </label>
@@ -161,6 +162,12 @@ export default function ConfigStepView({
               <FolderIcon />
               {t('config.browse')}
             </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <InfoIcon className="size-6 text-zinc-500" />
+            <p className="text-xs text-zinc-500">
+              {t('config.sectors_desc')}
+            </p>
           </div>
         </div>
       </div>

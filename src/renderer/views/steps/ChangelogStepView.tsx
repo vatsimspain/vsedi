@@ -108,13 +108,13 @@ export default function ChangelogStepView({ onNext, onBack }: StepProps) {
 
       <div className="grid flex-1 min-h-0 grid-cols-2 gap-4">
         <div className="flex flex-col min-h-0">
-          <p className="mb-2 text-xs font-medium tracking-wider uppercase text-slate-500">VSEDI</p>
+          <p className="mb-2 text-xs font-medium tracking-wider uppercase text-slate-500">{t('changelog.vsedi')}</p>
           <div className="flex-1 px-5 py-4 overflow-y-auto text-sm leading-relaxed border rounded-xl bg-zinc-900/70 border-slate-700/40 text-slate-300">
             {renderColumn(vsedi)}
           </div>
         </div>
         <div className="flex flex-col min-h-0">
-          <p className="mb-2 text-xs font-medium tracking-wider uppercase text-slate-500">Airac</p>
+          <p className="mb-2 text-xs font-medium tracking-wider uppercase text-slate-500">{t('changelog.airac')}</p>
           <div className="flex-1 px-5 py-4 overflow-y-auto text-sm leading-relaxed border rounded-xl bg-zinc-900/70 border-slate-700/40 text-slate-300">
             {renderColumn(operaciones)}
           </div>

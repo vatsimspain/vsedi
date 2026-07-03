@@ -29,7 +29,9 @@
     "title": "Novedades",
     "subtitle": "Cambios en VSEDI y en los sectores de Operaciones para este AIRAC.",
     "loading": "Cargando…",
-    "loadError": "No se pudieron cargar las novedades."
+    "loadError": "No se pudieron cargar las novedades.",
+    "vsedi": "VSEDI",
+    "airac": "Airac"
   },
   "euroscope": {
     "title": "EuroScope",
@@ -65,11 +67,12 @@
     "name": "Nombre en red",
     "name_placeholder": "Ej. Pepe Viyuela",
     "hoppie": "Código Hoppie",
-    "hoppie_placeholder": "Tu código logon de Hoppie",
+    "hoppie_placeholder": "Ej. t76MKHBavE2r44c",
     "rank": "Rango",
     "font_size": "Tipo de fuente",
     "sectors_folder": "Carpeta de sectores de Euroscope",
     "sectors_placeholder": "Selecciona la carpeta de sectores...",
+    "sectors_desc": "Esta carpeta contiene los archivos de sectores de EuroScope. De forma predeterminada, se encuentra en C:\\Users\\[usuario]\\AppData\\Roaming\\EuroScope. Puedes utilizar esta ubicación o seleccionar otra carpeta donde desees instalar los archivos. Al iniciar EuroScope, deberás abrir el archivo .prf desde esta carpeta.",
     "browse": "Examinar",
     "overwrite_label": "Sobreescribir settings",
     "overwrite_desc": "Tu configuración actual se borrará y los sectores instalados tendrán los ajustes por defecto",
