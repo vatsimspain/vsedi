@@ -27,7 +27,7 @@
   },
   "changelog": {
     "title": "Novedades",
-    "subtitle": "Cambios en VSEDI y en los sectores de Operaciones para este AIRAC.",
+    "subtitle": "Cambios en VSEDI y en los sectores de EuroScope para este AIRAC.",
     "loading": "Cargando…",
     "loadError": "No se pudieron cargar las novedades.",
     "vsedi": "VSEDI",
