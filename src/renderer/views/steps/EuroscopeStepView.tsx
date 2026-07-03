@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import EuroscopeLogo from '../../../../assets/logo/euroscope.png';
 import { ArrowRightIcon } from '../../icons/ArrowRight.icon';
 import type { StepProps } from '../../models/wizard.types';
@@ -12,14 +13,14 @@ const VERSIONS = [
   {
     id: 'recommended',
     version: '3.2.3.2',
-    description: 'Versión recomendada por VATSIM Spain',
+    descriptionKey: 'euroscope.version_recommended',
     url: 'https://euroscope.hu/install/EuroScopeSetup.3.2.3.2.msi',
     recommended: true,
   },
   {
     id: 'latest',
     version: '3.2.13',
-    description: 'Última versión disponible',
+    descriptionKey: 'euroscope.version_latest',
     url: 'https://euroscope.hu/install/EuroScopeSetup.3.2.13.msi',
     recommended: false,
   },
@@ -36,14 +37,13 @@ type Phase =
   | 'error';
 
 export default function EuroscopeStepView({ onNext, onBack }: StepProps) {
+  const { t } = useTranslation();
   const [phase, setPhase] = useState<Phase>('loading');
   const [exePath, setExePath] = useState<string | null>(null);
   const [version, setVersion] = useState<string | null>(null);
   const [downloadPercent, setDownloadPercent] = useState(0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [selectedVersionId, setSelectedVersionId] = useState<string | null>(
-    null,
-  );
+  const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
 
   useEffect(() => {
     window.electron.euroscope
@@ -100,7 +100,7 @@ export default function EuroscopeStepView({ onNext, onBack }: StepProps) {
     if (result.success) {
       setPhase('pick');
     } else {
-      setErrorMsg(result.error ?? 'Error desconocido');
+      setErrorMsg(result.error ?? t('euroscope.error_unknown'));
       setPhase('error');
     }
   };
@@ -121,11 +121,10 @@ export default function EuroscopeStepView({ onNext, onBack }: StepProps) {
         <img src={EuroscopeLogo} alt="EuroScope Logo" className="w-16" />
         <div className="flex flex-col gap-2 mb-4">
           <h2 className="text-xl font-semibold font-akira text-slate-100">
-            EuroScope
+            {t('euroscope.title')}
           </h2>
           <p className="mt-1 text-sm text-slate-400">
-            EuroScope es el cliente radar de VATSIM necesario para conectarte a
-            la red como controlador.
+            {t('euroscope.subtitle')}
           </p>
         </div>
       </div>
@@ -133,14 +132,14 @@ export default function EuroscopeStepView({ onNext, onBack }: StepProps) {
       {phase === 'loading' && (
         <div className="flex items-center gap-3 text-sm text-slate-400">
           <div className="flex-shrink-0 w-4 h-4 border-2 rounded-full border-slate-600 border-t-zinc-300 animate-spin" />
-          Cargando...
+          {t('euroscope.loading')}
         </div>
       )}
 
       {phase === 'ask' && (
         <div className="flex flex-col gap-3">
           <p className="text-sm text-slate-300">
-            ¿Ya tienes EuroScope instalado en tu equipo?
+            {t('euroscope.ask_question')}
           </p>
           <div className="grid grid-cols-2 gap-3">
             <button
@@ -151,10 +150,10 @@ export default function EuroscopeStepView({ onNext, onBack }: StepProps) {
               <TickIcon className="w-5 h-5 text-green-400" />
               <div className="flex flex-col gap-2">
                 <span className="text-sm font-medium text-slate-200">
-                  Sí, ya lo tengo
+                  {t('euroscope.ask_yes')}
                 </span>
                 <span className="text-xs text-slate-500">
-                  Indicar dónde está EuroScope.exe
+                  {t('euroscope.ask_yes_hint')}
                 </span>
               </div>
             </button>
@@ -166,10 +165,10 @@ export default function EuroscopeStepView({ onNext, onBack }: StepProps) {
               <CloseIcon className="w-5 h-5 text-red-400" />
               <div className="flex flex-col gap-2">
                 <span className="text-sm font-medium text-slate-200">
-                  No, instalar ahora
+                  {t('euroscope.ask_no')}
                 </span>
                 <span className="text-xs text-slate-500">
-                  Descargar e instalar EuroScope
+                  {t('euroscope.ask_no_hint')}
                 </span>
               </div>
             </button>
@@ -180,8 +179,9 @@ export default function EuroscopeStepView({ onNext, onBack }: StepProps) {
       {phase === 'pick' && (
         <div className="flex flex-col gap-3">
           <p className="text-sm text-slate-400">
-            Selecciona el archivo{' '}
-            <span className="text-slate-200">EuroScope.exe</span> en tu equipo.
+            {t('euroscope.pick_prompt_pre')}{' '}
+            <span className="text-slate-200">EuroScope.exe</span>{' '}
+            {t('euroscope.pick_prompt_post')}
           </p>
           <button
             type="button"
@@ -189,10 +189,10 @@ export default function EuroscopeStepView({ onNext, onBack }: StepProps) {
             className="self-start flex items-center gap-2 px-4 py-2.5 bg-zinc-700 hover:bg-zinc-600 active:bg-zinc-800 text-white text-sm font-medium rounded-lg transition-colors"
           >
             <FolderIcon />
-            Seleccionar EuroScope.exe…
+            {t('euroscope.pick_button')}
           </button>
           <p className="text-xs text-slate-500">
-            Ruta por defecto: C:\Program Files (x86)\EuroScope
+            {t('euroscope.pick_default_path')}
           </p>
         </div>
       )}
@@ -205,7 +205,7 @@ export default function EuroscopeStepView({ onNext, onBack }: StepProps) {
             </span>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-emerald-400">
-                EuroScope configurado
+                {t('euroscope.found_configured')}
                 {version && (
                   <span className="ml-2 text-xs font-normal text-emerald-600">
                     v{version}
@@ -228,7 +228,7 @@ export default function EuroscopeStepView({ onNext, onBack }: StepProps) {
             className="self-start flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-red-400/70 hover:text-red-300 hover:bg-red-950/30 border border-transparent hover:border-red-800/40 transition-all"
           >
             <CloseIcon className="w-3 h-3" />
-            Olvidar ruta guardada
+            {t('euroscope.found_forget')}
           </button>
         </div>
       )}
@@ -236,7 +236,7 @@ export default function EuroscopeStepView({ onNext, onBack }: StepProps) {
       {phase === 'install' && (
         <div className="flex flex-col gap-3">
           <p className="text-sm text-slate-400">
-            Selecciona la versión a instalar:
+            {t('euroscope.install_select_version')}
           </p>
           <div className="grid grid-cols-2 gap-3">
             {VERSIONS.map((v) => {
@@ -263,7 +263,7 @@ export default function EuroscopeStepView({ onNext, onBack }: StepProps) {
                     </span>
                     {v.recommended && (
                       <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 border border-blue-500/30 text-blue-300 font-medium">
-                        Recomendada
+                        {t('euroscope.install_recommended_badge')}
                       </span>
                     )}
                     {selected && (
@@ -275,7 +275,7 @@ export default function EuroscopeStepView({ onNext, onBack }: StepProps) {
                   <span
                     className={`text-xs ${selected || v.recommended ? 'text-blue-400/70' : 'text-slate-500'}`}
                   >
-                    {v.description}
+                    {t(v.descriptionKey)}
                   </span>
                 </button>
               );
@@ -295,8 +295,8 @@ export default function EuroscopeStepView({ onNext, onBack }: StepProps) {
           <div className="flex items-center gap-3 text-sm text-slate-300">
             <div className="flex-shrink-0 w-4 h-4 border-2 rounded-full border-slate-600 border-t-zinc-300 animate-spin" />
             {phase === 'downloading'
-              ? `Descargando... ${downloadPercent}%`
-              : 'Instalando EuroScope...'}
+              ? t('euroscope.downloading', { percent: downloadPercent })
+              : t('euroscope.installing')}
           </div>
           {phase === 'downloading' && (
             <div className="h-1.5 bg-zinc-700 rounded-full overflow-hidden">
@@ -308,8 +308,7 @@ export default function EuroscopeStepView({ onNext, onBack }: StepProps) {
           )}
           {phase === 'installing' && (
             <p className="text-xs text-slate-500">
-              El instalador de EuroScope se ha abierto. Completa la instalación
-              y ciérralo para continuar.
+              {t('euroscope.install_prompt')}
             </p>
           )}
         </div>
@@ -323,7 +322,7 @@ export default function EuroscopeStepView({ onNext, onBack }: StepProps) {
           className="flex items-center gap-2 px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-900 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-40"
         >
           <ArrowRightIcon className="w-4 h-4 rotate-180" />
-          Atrás
+          {t('nav.back')}
         </button>
 
         <div className="flex items-center gap-2">
@@ -336,7 +335,7 @@ export default function EuroscopeStepView({ onNext, onBack }: StepProps) {
               onClick={onNext}
               className="px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-900 text-slate-400 hover:text-slate-300 text-sm font-medium rounded-lg border border-zinc-700/50 transition-colors"
             >
-              Omitir
+              {t('nav.skip')}
             </button>
           )}
           {phase === 'install' && selectedVersionId && (
@@ -348,8 +347,9 @@ export default function EuroscopeStepView({ onNext, onBack }: StepProps) {
               }}
               className="flex items-center gap-2 px-5 py-2.5 bg-zinc-700 hover:bg-zinc-600 active:bg-zinc-800 text-white text-sm font-medium rounded-lg transition-colors"
             >
-              Instalar v
-              {VERSIONS.find((v) => v.id === selectedVersionId)?.version}
+              {t('euroscope.install_button', {
+                version: VERSIONS.find((v) => v.id === selectedVersionId)?.version,
+              })}
               <ArrowRightIcon />
             </button>
           )}
@@ -359,7 +359,7 @@ export default function EuroscopeStepView({ onNext, onBack }: StepProps) {
               onClick={onNext}
               className="flex items-center gap-2 px-5 py-2.5 bg-zinc-700 hover:bg-zinc-600 active:bg-zinc-800 text-white text-sm font-medium rounded-lg transition-colors"
             >
-              Continuar
+              {t('nav.continue')}
               <ArrowRightIcon />
             </button>
           )}

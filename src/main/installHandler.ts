@@ -61,6 +61,12 @@ export function get(url: string): Promise<Buffer> {
         ) {
           return resolve(get(res.headers.location));
         }
+        if (!res.statusCode || res.statusCode < 200 || res.statusCode >= 300) {
+          res.resume();
+          return reject(
+            new Error(`Petición fallida: servidor devolvió HTTP ${res.statusCode ?? 'desconocido'}`),
+          );
+        }
         const chunks: Buffer[] = [];
         res.on('data', (c: Buffer) => chunks.push(c));
         res.on('end', () => resolve(Buffer.concat(chunks)));
@@ -89,18 +95,42 @@ function downloadWithProgress(
             downloadWithProgress(res.headers.location, dest, onProgress),
           );
         }
+        if (!res.statusCode || res.statusCode < 200 || res.statusCode >= 300) {
+          res.resume();
+          return reject(
+            new Error(`Descarga fallida: servidor devolvió HTTP ${res.statusCode ?? 'desconocido'}`),
+          );
+        }
         const total = parseInt(res.headers['content-length'] ?? '0', 10);
         let received = 0;
-        const file = fs.createWriteStream(dest);
+        let file: fs.WriteStream;
+        try {
+          file = fs.createWriteStream(dest);
+        } catch (err) {
+          res.resume();
+          return reject(err);
+        }
+        let errored = false;
         res.on('data', (chunk: Buffer) => {
           received += chunk.length;
           if (total > 0) onProgress(Math.round((received / total) * 100));
-          file.write(chunk);
+          file.write(chunk, (writeErr) => {
+            if (writeErr && !errored) {
+              errored = true;
+              file.destroy();
+              reject(writeErr);
+            }
+          });
         });
-        res.on('end', () => file.end(() => resolve()));
+        res.on('end', () => {
+          if (!errored) file.end(() => resolve());
+        });
         res.on('error', (err) => {
-          file.destroy();
-          reject(err);
+          if (!errored) {
+            errored = true;
+            file.destroy();
+            reject(err);
+          }
         });
       })
       .on('error', reject);
@@ -118,18 +148,20 @@ function getAssetsPath(): string {
 function runPowerShell(cmd: string, elevated = false): Promise<void> {
   return new Promise((resolve, reject) => {
     if (elevated) {
-      const tmpScript = path.join(os.tmpdir(), `vsedi-ps-${Date.now()}.ps1`);
+      const stamp = Date.now();
+      const tmpScript = path.join(os.tmpdir(), `vsedi-ps-${stamp}.ps1`);
+      const tmpLog = path.join(os.tmpdir(), `vsedi-ps-${stamp}.log`);
+      // Wrap the command so all output is captured to a log file the parent can read.
+      const wrappedCmd = `try { ${cmd} } catch { $_ | Out-File -LiteralPath '${tmpLog.replace(/'/g, "''")}' -Append; throw } *>> '${tmpLog.replace(/'/g, "''")}'`;
       try {
-        fs.writeFileSync(tmpScript, cmd, 'utf8');
+        fs.writeFileSync(tmpScript, wrappedCmd, 'utf8');
       } catch (err) {
         reject(err);
         return;
       }
       const cleanup = () => {
-        try {
-          fs.unlinkSync(tmpScript);
-        } catch {
-          /* ignore */
+        for (const f of [tmpScript, tmpLog]) {
+          try { fs.unlinkSync(f); } catch { /* ignore */ }
         }
       };
       const elevateCmd = `$proc = Start-Process powershell -ArgumentList @('-NoProfile', '-NonInteractive', '-File', '${tmpScript.replace(/'/g, "''")}') -Verb RunAs -Wait -PassThru; exit $proc.ExitCode`;
@@ -140,10 +172,12 @@ function runPowerShell(cmd: string, elevated = false): Promise<void> {
         elevateCmd,
       ]);
       ps.on('close', (code) => {
+        let log = '';
+        try { log = fs.readFileSync(tmpLog, 'utf8').trim(); } catch { /* no log */ }
         cleanup();
         if (code === 0) resolve();
         else
-          reject(new Error(`PowerShell (elevated) exited with code ${code}`));
+          reject(new Error(log || `PowerShell (elevated) exited with code ${code}`));
       });
       ps.on('error', (err) => {
         cleanup();
@@ -156,13 +190,12 @@ function runPowerShell(cmd: string, elevated = false): Promise<void> {
         '-Command',
         cmd,
       ]);
-      let stderr = '';
-      ps.stderr.on('data', (d: Buffer) => {
-        stderr += d.toString();
-      });
+      let output = '';
+      ps.stdout.on('data', (d: Buffer) => { output += d.toString(); });
+      ps.stderr.on('data', (d: Buffer) => { output += d.toString(); });
       ps.on('close', (code) => {
         if (code === 0) resolve();
-        else reject(new Error(stderr || `PowerShell exited with code ${code}`));
+        else reject(new Error(output.trim() || `PowerShell exited with code ${code}`));
       });
       ps.on('error', reject);
     }
@@ -233,8 +266,8 @@ async function extractZip(zipPath: string, destPath: string): Promise<void> {
     `Expand-Archive -LiteralPath '${zipPath.replace(/'/g, "''")}' -DestinationPath $tmp -Force`,
     `$items = @(Get-ChildItem -LiteralPath $tmp)`,
     `$src = if ($items.Count -eq 1 -and $items[0].PSIsContainer) { $items[0].FullName } else { $tmp }`,
-    `& robocopy $src $dest /E /IS /IT /IM | Out-Null`,
-    `if ($LASTEXITCODE -ge 8) { throw "robocopy failed with exit code $LASTEXITCODE" }`,
+    `& robocopy $src $dest /E /IS /IT /IM /R:0 /W:0 | Out-Null`,
+    `if ($LASTEXITCODE -ge 8) { throw "robocopy failed with exit code $LASTEXITCODE. Cierra EuroScope y cualquier otro programa que use los archivos de sectores antes de instalar." }`,
     `Remove-Item -LiteralPath $tmp -Recurse -Force`,
   ].join('; ');
 
@@ -299,7 +332,7 @@ async function backupAndCleanSectorsFolder(folder: string): Promise<void> {
     `$destZip = '${destZip.replace(/'/g, "''")}'`,
     // Exclude previous backups so they don't pile up inside each other
     `$items = @(Get-ChildItem -LiteralPath $folder -Force | Where-Object { $_.Name -notlike 'VSEDI_Backup_*.zip' })`,
-    `if ($items.Count -eq 0) { throw 'La carpeta de sectores está vacía, no se puede hacer backup.' }`,
+    `if ($items.Count -eq 0) { Write-Output 'Carpeta vacía, omitiendo backup.'; exit 0 }`,
     `Compress-Archive -LiteralPath $items.FullName -DestinationPath $tmpZip -Force`,
     `Move-Item -LiteralPath $tmpZip -Destination $destZip -Force`,
   ].join('; ');
@@ -521,7 +554,7 @@ export async function runInstall(
 
   const tmpPath = path.join(
     os.tmpdir(),
-    overwriteSettings ? 'data_install.zip' : 'data_update.zip',
+    `vsedi-${overwriteSettings ? 'install' : 'update'}-${Date.now()}.zip`,
   );
 
   try {
@@ -672,5 +705,7 @@ export async function runInstall(
     return { success: true };
   } catch (err) {
     return { success: false, error: (err as Error).message };
+  } finally {
+    try { fs.unlinkSync(tmpPath); } catch { /* ignore */ }
   }
 }

@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useInstallation } from '../../hooks/useInstallation.hook';
 import type { StepProps } from '../../models/wizard.types';
 import { EXTRAS } from '../../../const/extras.config';
@@ -7,16 +8,15 @@ import { CheckMarkIcon } from '../../icons/CheckMark.icon';
 import { CloseIcon } from '../../icons/Close.icon';
 import { ArrowRightIcon } from '../../icons/ArrowRight.icon';
 
-const BACKUP_TASK = {
-  label: 'Haciendo backup y limpiando sectores antiguos',
-  stage: 'backup',
-} as const;
+type TaskStage = 'fetching' | 'downloading' | 'backup' | 'extracting';
+type Task = { stage: TaskStage };
 
-const BASE_TASKS = [
-  { label: 'Obteniendo información del release', stage: 'fetching' },
-  { label: 'Descargando archivos', stage: 'downloading' },
-  { label: 'Instalando en EuroScope', stage: 'extracting' },
-] as const;
+const BACKUP_TASK: Task = { stage: 'backup' };
+const BASE_TASKS: Task[] = [
+  { stage: 'fetching' },
+  { stage: 'downloading' },
+  { stage: 'extracting' },
+];
 
 function overallProgress(
   stage: string,
@@ -48,8 +48,8 @@ export default function ProgressStepView({
   onBack,
   onNext,
 }: StepProps) {
-  const { status, progress, error, install, extrasProgress } =
-    useInstallation();
+  const { t } = useTranslation();
+  const { status, progress, error, install, extrasProgress } = useInstallation();
   const done = status === 'done';
   const hasError = status === 'error';
 
@@ -99,17 +99,17 @@ export default function ProgressStepView({
       <div>
         <h2 className="text-xl font-semibold font-akira text-slate-100">
           {done
-            ? '¡Listo para controlar!'
+            ? t('progress.title_ready')
             : hasError
-              ? 'Error durante la instalación'
-              : 'Configurando tu EuroScope...'}
+              ? t('progress.title_error')
+              : t('progress.title_progress')}
         </h2>
         <p className="mt-1 text-sm text-slate-400">
           {done
-            ? 'Euroscope se ha configurado correctamente. Ya puedes empezar a controlar.'
+            ? t('progress.subtitle_ready')
             : hasError
-              ? 'Ha ocurrido un error. Revisa los datos e inténtalo de nuevo.'
-              : 'Por favor espera mientras configuramos el sistema.'}
+              ? t('progress.subtitle_error')
+              : t('progress.subtitle_progress')}
         </p>
       </div>
 
@@ -127,7 +127,7 @@ export default function ProgressStepView({
               />
             </div>
             <div className="flex justify-between mt-2">
-              <span className="text-xs text-slate-500">Progreso</span>
+              <span className="text-xs text-slate-500">{t('progress.progress_label')}</span>
               <span className="text-xs font-medium text-slate-400 tabular-nums">
                 {Math.round(totalProgress)}%
               </span>
@@ -162,7 +162,7 @@ export default function ProgressStepView({
                           : 'text-slate-500'
                     }
                   >
-                    {task.label}
+                    {t(`progress.task_${task.stage}`)}
                     {isActive &&
                       task.stage === 'downloading' &&
                       progress > 0 && (
@@ -222,17 +222,16 @@ export default function ProgressStepView({
                               : 'text-slate-500'
                       }
                     >
-                      {extra.name}
+                      {t(`extras_config.${extra.id}_name`)}
                     </span>
                     {needsUserInteraction && (
                       <p className="mt-0.5 text-xs text-amber-400/80">
-                        El instalador se ha abierto. Configúralo y ciérralo para
-                        continuar.
+                        {t('progress.extra_installer_open')}
                       </p>
                     )}
                     {isError && (
                       <p className="mt-0.5 text-xs text-red-400/70">
-                        No se pudo instalar. Puedes hacerlo manualmente después.
+                        {t('progress.extra_install_failed')}
                       </p>
                     )}
                   </div>
@@ -251,7 +250,7 @@ export default function ProgressStepView({
             className="flex items-center gap-2 px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-900 text-white text-sm font-medium rounded-lg transition-colors"
           >
             <ArrowRightIcon className="w-4 h-4 rotate-180" />
-            Atrás
+            {t('nav.back')}
           </button>
           {done && (
             <button
@@ -259,7 +258,7 @@ export default function ProgressStepView({
               onClick={onNext}
               className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors"
             >
-              Finalizar
+              {t('nav.finish')}
               <TickIcon />
             </button>
           )}
