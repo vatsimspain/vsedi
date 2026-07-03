@@ -27,7 +27,7 @@
   },
   "changelog": {
     "title": "Changelog",
-    "subtitle": "Changes in VSEDI and the Operations sectors for this AIRAC.",
+    "subtitle": "Changes in VSEDI and the EuroScope sectors for this AIRAC.",
     "loading": "Loading…",
     "loadError": "Could not load the changelog.",
     "vsedi": "VSEDI (Sorry, only in Spanish! =D)",
