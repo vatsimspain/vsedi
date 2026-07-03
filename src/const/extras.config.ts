@@ -37,7 +37,7 @@ export const EXTRAS: ExtraConfig[] = [
     description:
       'Esta fuente será usada por el plugin SACTA para asemejarse lo máximo posible a los radares reales.',
     source: 'font',
-    assetPath: '../../assets/extras/vspv.ttf',
+    assetPath: 'extras/vspv.ttf',
   },
   {
     id: 'trackaudio',

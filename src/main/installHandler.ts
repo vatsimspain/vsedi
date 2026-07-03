@@ -61,6 +61,12 @@ export function get(url: string): Promise<Buffer> {
         ) {
           return resolve(get(res.headers.location));
         }
+        if (!res.statusCode || res.statusCode < 200 || res.statusCode >= 300) {
+          res.resume();
+          return reject(
+            new Error(`Petición fallida: servidor devolvió HTTP ${res.statusCode ?? 'desconocido'}`),
+          );
+        }
         const chunks: Buffer[] = [];
         res.on('data', (c: Buffer) => chunks.push(c));
         res.on('end', () => resolve(Buffer.concat(chunks)));
@@ -89,18 +95,42 @@ function downloadWithProgress(
             downloadWithProgress(res.headers.location, dest, onProgress),
           );
         }
+        if (!res.statusCode || res.statusCode < 200 || res.statusCode >= 300) {
+          res.resume();
+          return reject(
+            new Error(`Descarga fallida: servidor devolvió HTTP ${res.statusCode ?? 'desconocido'}`),
+          );
+        }
         const total = parseInt(res.headers['content-length'] ?? '0', 10);
         let received = 0;
-        const file = fs.createWriteStream(dest);
+        let file: fs.WriteStream;
+        try {
+          file = fs.createWriteStream(dest);
+        } catch (err) {
+          res.resume();
+          return reject(err);
+        }
+        let errored = false;
         res.on('data', (chunk: Buffer) => {
           received += chunk.length;
           if (total > 0) onProgress(Math.round((received / total) * 100));
-          file.write(chunk);
+          file.write(chunk, (writeErr) => {
+            if (writeErr && !errored) {
+              errored = true;
+              file.destroy();
+              reject(writeErr);
+            }
+          });
         });
-        res.on('end', () => file.end(() => resolve()));
+        res.on('end', () => {
+          if (!errored) file.end(() => resolve());
+        });
         res.on('error', (err) => {
-          file.destroy();
-          reject(err);
+          if (!errored) {
+            errored = true;
+            file.destroy();
+            reject(err);
+          }
         });
       })
       .on('error', reject);
@@ -233,8 +263,8 @@ async function extractZip(zipPath: string, destPath: string): Promise<void> {
     `Expand-Archive -LiteralPath '${zipPath.replace(/'/g, "''")}' -DestinationPath $tmp -Force`,
     `$items = @(Get-ChildItem -LiteralPath $tmp)`,
     `$src = if ($items.Count -eq 1 -and $items[0].PSIsContainer) { $items[0].FullName } else { $tmp }`,
-    `& robocopy $src $dest /E /IS /IT /IM | Out-Null`,
-    `if ($LASTEXITCODE -ge 8) { throw "robocopy failed with exit code $LASTEXITCODE" }`,
+    `& robocopy $src $dest /E /IS /IT /IM /R:0 /W:0 | Out-Null`,
+    `if ($LASTEXITCODE -ge 8) { throw "robocopy failed with exit code $LASTEXITCODE. Cierra EuroScope y cualquier otro programa que use los archivos de sectores antes de instalar." }`,
     `Remove-Item -LiteralPath $tmp -Recurse -Force`,
   ].join('; ');
 
