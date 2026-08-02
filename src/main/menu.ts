@@ -5,6 +5,7 @@ import {
   BrowserWindow,
   MenuItemConstructorOptions,
 } from 'electron';
+import { openLogFile } from './installHandler';
 
 interface DarwinMenuItemConstructorOptions extends MenuItemConstructorOptions {
   selector?: string;
@@ -208,6 +209,13 @@ export default class MenuBuilder {
             shell.openExternal('mailto:operaciones@vatsimspain.es');
           },
         },
+        { type: 'separator' },
+        {
+          label: 'Abrir archivo de log',
+          click() {
+            openLogFile();
+          },
+        },
       ],
     };
 
@@ -311,6 +319,15 @@ export default class MenuBuilder {
         label: 'Ayuda',
         submenu: [
           {
+            label: 'Manual de usuario',
+            click() {
+              shell.openExternal(
+                'https://biblioteca.vatsimspain.es/books/manuales/page/vsedi',
+              );
+            },
+          },
+          { type: 'separator' },
+          {
             label: 'Repositorio en GitHub',
             click() {
               shell.openExternal('https://github.com/vatsimspain/vsedi');
@@ -329,42 +346,55 @@ export default class MenuBuilder {
               shell.openExternal('https://vatsimspain.es');
             },
           },
+          // { type: 'separator' },
+          // {
+          //   label: 'Discord',
+          //   click() {
+          //     shell.openExternal('https://dashboard.vatsimspain.es');
+          //   },
+          // },
+          // {
+          //   label: 'Instagram',
+          //   click() {
+          //     shell.openExternal('https://www.instagram.com/vatsimspain/');
+          //   },
+          // },
+          // {
+          //   label: 'YouTube',
+          //   click() {
+          //     shell.openExternal('https://www.youtube.com/@vatsimspain');
+          //   },
+          // },
+          // {
+          //   label: 'X (Twitter)',
+          //   click() {
+          //     shell.openExternal('https://x.com/vatsimSpain');
+          //   },
+          // },
+          // {
+          //   label: 'TikTok',
+          //   click() {
+          //     shell.openExternal('https://www.tiktok.com/@vatsimspain');
+          //   },
+          // },
           { type: 'separator' },
           {
-            label: 'Discord',
+            label: 'Contacto: webmaster@vatsimspain.es',
             click() {
-              shell.openExternal('https://dashboard.vatsimspain.es');
+              shell.openExternal('mailto:webmaster@vatsimspain.es');
             },
           },
-          {
-            label: 'Instagram',
-            click() {
-              shell.openExternal('https://www.instagram.com/vatsimspain/');
-            },
-          },
-          {
-            label: 'YouTube',
-            click() {
-              shell.openExternal('https://www.youtube.com/@vatsimspain');
-            },
-          },
-          {
-            label: 'X (Twitter)',
-            click() {
-              shell.openExternal('https://x.com/vatsimSpain');
-            },
-          },
-          {
-            label: 'TikTok',
-            click() {
-              shell.openExternal('https://www.tiktok.com/@vatsimspain');
-            },
-          },
-          { type: 'separator' },
           {
             label: 'Contacto: operaciones@vatsimspain.es',
             click() {
               shell.openExternal('mailto:operaciones@vatsimspain.es');
+            },
+          },
+          { type: 'separator' },
+          {
+            label: 'Abrir archivo de log',
+            click() {
+              openLogFile();
             },
           },
           { type: 'separator' },

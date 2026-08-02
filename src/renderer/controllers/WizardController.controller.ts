@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
+import { EXTRAS } from '../../const/extras.config';
 import type { WizardFormData, WizardStep } from '../models/wizard.types';
+
+const MANDATORY_EXTRAS = EXTRAS.filter((e) => e.mandatory).map((e) => e.id);
 
 const DEFAULT_FORM: WizardFormData = {
   cid: '',
@@ -10,8 +13,8 @@ const DEFAULT_FORM: WizardFormData = {
   fontSize: 'medium',
   sectorsFolder: '',
   overwriteSettings: false,
-  backupAndCleanSectors: false,
-  extras: [],
+  backupAndCleanSectors: true,
+  extras: MANDATORY_EXTRAS,
 };
 
 export function useWizardController(steps: WizardStep[]) {

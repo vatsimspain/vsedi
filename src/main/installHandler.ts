@@ -1,5 +1,6 @@
 import { spawn } from 'child_process';
-import { app, IpcMainInvokeEvent } from 'electron';
+import { app, IpcMainInvokeEvent, shell } from 'electron';
+import log from 'electron-log';
 import fs from 'fs';
 import http from 'http';
 import https from 'https';
@@ -16,6 +17,24 @@ import type {
 
 const GITHUB_API =
   'https://api.github.com/repos/vatsimspain/Operaciones/releases/tags/vsedi';
+
+// Dedicated log file for install/update operations, separate from the
+// auto-updater's main.log, so users can send just this one for support.
+const installLog = log.create({ logId: 'vsedi-install' });
+installLog.transports.file.fileName = 'vsedi-log.log';
+// Reset on every app launch so the file only ever holds the current session.
+installLog.transports.file.getFile().clear();
+
+export async function openLogFile(): Promise<{ success: boolean; error?: string }> {
+  try {
+    const logPath = installLog.transports.file.getFile().path;
+    const openError = await shell.openPath(logPath);
+    if (openError) throw new Error(openError);
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: (err as Error).message };
+  }
+}
 
 function getConfigPath(): string {
   return path.join(app.getPath('userData'), 'vsedi-config.json');
@@ -164,7 +183,8 @@ function runPowerShell(cmd: string, elevated = false): Promise<void> {
           try { fs.unlinkSync(f); } catch { /* ignore */ }
         }
       };
-      const elevateCmd = `$proc = Start-Process powershell -ArgumentList @('-NoProfile', '-NonInteractive', '-File', '${tmpScript.replace(/'/g, "''")}') -Verb RunAs -Wait -PassThru; exit $proc.ExitCode`;
+      const elevateCmd = `try { $proc = Start-Process powershell -ArgumentList @('-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', '${tmpScript.replace(/'/g, "''")}') -Verb RunAs -Wait -PassThru -ErrorAction Stop; exit $proc.ExitCode } catch { $_.Exception.Message | Out-File -LiteralPath '${tmpLog.replace(/'/g, "''")}' -Append; exit 1 }`;
+      installLog.info('Requesting PowerShell elevation (UAC)...');
       const ps = spawn('powershell', [
         '-NoProfile',
         '-NonInteractive',
@@ -172,14 +192,22 @@ function runPowerShell(cmd: string, elevated = false): Promise<void> {
         elevateCmd,
       ]);
       ps.on('close', (code) => {
-        let log = '';
-        try { log = fs.readFileSync(tmpLog, 'utf8').trim(); } catch { /* no log */ }
+        let ffLog = '';
+        try { ffLog = fs.readFileSync(tmpLog, 'utf8').trim(); } catch { /* no log */ }
         cleanup();
-        if (code === 0) resolve();
-        else
-          reject(new Error(log || `PowerShell (elevated) exited with code ${code}`));
+        if (code === 0) {
+          installLog.info('Elevated PowerShell completed successfully.');
+          resolve();
+        } else {
+          installLog.error(
+            `Elevated PowerShell failed (code ${code}).`,
+            ffLog || '(no details)',
+          );
+          reject(new Error(ffLog || `PowerShell (elevated) exited with code ${code}`));
+        }
       });
       ps.on('error', (err) => {
+        installLog.error('Failed to launch elevated PowerShell.', err);
         cleanup();
         reject(err);
       });
@@ -194,8 +222,15 @@ function runPowerShell(cmd: string, elevated = false): Promise<void> {
       ps.stdout.on('data', (d: Buffer) => { output += d.toString(); });
       ps.stderr.on('data', (d: Buffer) => { output += d.toString(); });
       ps.on('close', (code) => {
-        if (code === 0) resolve();
-        else reject(new Error(output.trim() || `PowerShell exited with code ${code}`));
+        if (code === 0) {
+          resolve();
+        } else {
+          installLog.warn(
+            `PowerShell failed (code ${code}), will retry elevated if applicable.`,
+            output.trim() || '(no output)',
+          );
+          reject(new Error(output.trim() || `PowerShell exited with code ${code}`));
+        }
       });
       ps.on('error', reject);
     }
@@ -214,6 +249,7 @@ async function writeFileSafe(
   } catch (err) {
     const code = (err as NodeJS.ErrnoException).code;
     if (code !== 'EACCES' && code !== 'EPERM') throw err;
+    installLog.warn(`Write to "${filePath}" denied (${code}), retrying elevated...`);
     const tmpFile = path.join(os.tmpdir(), `vsedi-write-${Date.now()}.tmp`);
     fs.writeFileSync(tmpFile, content, encoding);
     const cmd = `Move-Item -LiteralPath '${tmpFile.replace(/'/g, "''")}' -Destination '${filePath.replace(/'/g, "''")}' -Force`;
@@ -228,38 +264,53 @@ async function mkdirSafe(dir: string): Promise<void> {
   } catch (err) {
     const code = (err as NodeJS.ErrnoException).code;
     if (code !== 'EACCES' && code !== 'EPERM') throw err;
+    installLog.warn(`Create dir "${dir}" denied (${code}), retrying elevated...`);
     const cmd = `New-Item -ItemType Directory -Force -LiteralPath '${dir.replace(/'/g, "''")}'`;
     await runPowerShell(cmd, true);
   }
 }
 
+// Opens the bundled .ttf with its default handler (Windows' own font preview
+// dialog), so the user installs it via the "Instalar" button. This hands the
+// actual copy+registry work to Windows itself instead of a hand-rolled
+// PowerShell Copy-Item, which was unreliable: Windows' font cache service
+// briefly locks a font file right after it's registered, so a silent
+// reinstall/update could silently no-op.
+// Uses Start-Process -Wait (instead of shell.openPath) so this blocks until
+// the user closes that window, keeping multiple font extras sequential
+// instead of popping every preview window open at once.
 async function installFont(assetPath: string): Promise<void> {
   const src = path.join(getAssetsPath(), assetPath);
-  const fontName = path.basename(assetPath, path.extname(assetPath));
-  const cmd = [
-    `$src = '${src.replace(/'/g, "''")}'`,
-    `$dst = "$env:LOCALAPPDATA\\Microsoft\\Windows\\Fonts\\${path.basename(assetPath)}"`,
-    `Copy-Item -LiteralPath $src -Destination $dst -Force`,
-    `$reg = 'HKCU:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts'`,
-    `New-ItemProperty -Path $reg -Name '${fontName} (TrueType)' -Value $dst -PropertyType String -Force | Out-Null`,
-  ].join('; ');
-
-  await runPowerShell(cmd).catch(() => runPowerShell(cmd, true));
+  installLog.info(
+    `Opening font installer for "${path.basename(assetPath)}"...`,
+  );
+  const cmd = `Start-Process -FilePath '${src.replace(/'/g, "''")}' -Wait`;
+  await runPowerShell(cmd);
 }
 
 function runSilentInstaller(exePath: string, args: string[]): Promise<void> {
   return new Promise((resolve, reject) => {
+    installLog.info(`Running installer "${path.basename(exePath)}"...`);
     const proc = spawn(exePath, args, { detached: false });
     proc.on('close', (code) => {
-      if (code === 0 || code === null) resolve();
-      else reject(new Error(`Installer exited with code ${code}`));
+      if (code === 0 || code === null) {
+        resolve();
+      } else {
+        installLog.error(`Installer "${path.basename(exePath)}" exited with code ${code}.`);
+        reject(new Error(`Installer exited with code ${code}`));
+      }
     });
     proc.on('error', reject);
   });
 }
 
 async function extractZip(zipPath: string, destPath: string): Promise<void> {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vsedi-'));
+  // Scratch dir lives under the system Temp folder (not os.tmpdir(), which is
+  // under the user profile) so its path never contains accented/non-ASCII
+  // username characters — Windows PowerShell 5.1 (.NET Framework) can fail to
+  // resolve such paths for cmdlets like Remove-Item on some machines.
+  const systemTempDir = path.join(process.env.SystemRoot || 'C:\\Windows', 'Temp');
+  const tmpDir = fs.mkdtempSync(path.join(systemTempDir, 'vsedi-'));
   const cmd = [
     `$tmp = '${tmpDir.replace(/'/g, "''")}'`,
     `$dest = '${destPath.replace(/'/g, "''")}'`,
@@ -268,10 +319,13 @@ async function extractZip(zipPath: string, destPath: string): Promise<void> {
     `$src = if ($items.Count -eq 1 -and $items[0].PSIsContainer) { $items[0].FullName } else { $tmp }`,
     `& robocopy $src $dest /E /IS /IT /IM /R:0 /W:0 | Out-Null`,
     `if ($LASTEXITCODE -ge 8) { throw "robocopy failed with exit code $LASTEXITCODE. Cierra EuroScope y cualquier otro programa que use los archivos de sectores antes de instalar." }`,
-    `Remove-Item -LiteralPath $tmp -Recurse -Force`,
+    // Best-effort cleanup: a failure to delete this scratch dir must never
+    // fail the whole install, since robocopy already finished the real work.
+    `Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue`,
   ].join('; ');
 
   await runPowerShell(cmd).catch(() => runPowerShell(cmd, true));
+  installLog.info(`Sector files copied to "${destPath}".`);
 }
 
 // Deletes a file, retrying elevated on permission errors.
@@ -281,6 +335,7 @@ async function deleteFileSafe(filePath: string): Promise<void> {
   } catch (err) {
     const code = (err as NodeJS.ErrnoException).code;
     if (code !== 'EACCES' && code !== 'EPERM') throw err;
+    installLog.warn(`Delete "${filePath}" denied (${code}), retrying elevated...`);
     const cmd = `Remove-Item -LiteralPath '${filePath.replace(/'/g, "''")}' -Force`;
     await runPowerShell(cmd, true);
   }
@@ -337,9 +392,12 @@ async function backupAndCleanSectorsFolder(folder: string): Promise<void> {
     `Move-Item -LiteralPath $tmpZip -Destination $destZip -Force`,
   ].join('; ');
 
+  installLog.info(`Creating backup zip "${zipName}"...`);
   await runPowerShell(cmd).catch(() => runPowerShell(cmd, true));
 
-  for (const filePath of findStaleSectorFiles(folder)) {
+  const staleFiles = findStaleSectorFiles(folder);
+  installLog.info(`Removing ${staleFiles.length} stale sector file(s).`);
+  for (const filePath of staleFiles) {
     await deleteFileSafe(filePath);
   }
 }
@@ -377,7 +435,9 @@ async function patchSymbologyFontSize(
   const sizeValue = FONT_SIZE_VALUES[fontSize];
   if (!sizeValue) return;
   const targetEntries = new Set(SYMBOLOGY_FONT_ENTRIES);
-  for (const filePath of findSymbologyFiles(folder)) {
+  const symbologyFiles = findSymbologyFiles(folder);
+  installLog.info(`Found ${symbologyFiles.length} SIMBOLOGY.txt file(s).`);
+  for (const filePath of symbologyFiles) {
     const content = fs.readFileSync(filePath, 'utf8');
     const lineEnding = content.includes('\r\n') ? '\r\n' : '\n';
     const lines = content.split(/\r?\n/);
@@ -417,6 +477,8 @@ async function patchPrfFiles(
   rank: string,
   hoppieCode: string,
 ): Promise<void> {
+  const prfFiles = findPrfFiles(folder);
+  installLog.info(`Found ${prfFiles.length} .prf file(s) to patch.`);
   const rating = RATING_MAP[rank] ?? 1;
   const injected = [
     `LastSession\trealname\t${name}`,
@@ -428,7 +490,7 @@ async function patchPrfFiles(
   ];
   const prefixes = injected.map((l) => l.split('\t').slice(0, 2).join('\t'));
 
-  for (const prfPath of findPrfFiles(folder)) {
+  for (const prfPath of prfFiles) {
     const raw = fs.readFileSync(prfPath, 'latin1');
     const lines = raw
       .split(/\r?\n/)
@@ -460,6 +522,7 @@ export async function installEuroscopeMsi(
   url: string,
 ): Promise<{ success: boolean; error?: string }> {
   const tmpPath = path.join(os.tmpdir(), `vsedi-euroscope-${Date.now()}.msi`);
+  installLog.info('Starting EuroScope installation...');
   try {
     await downloadWithProgress(url, tmpPath, (pct) => {
       event.sender.send('euroscope:install:progress', {
@@ -481,8 +544,10 @@ export async function installEuroscopeMsi(
       });
       proc.on('error', reject);
     });
+    installLog.info('EuroScope installation completed.');
     return { success: true };
   } catch (err) {
+    installLog.error('EuroScope installation failed.', (err as Error).message);
     return { success: false, error: (err as Error).message };
   } finally {
     try {
@@ -557,9 +622,14 @@ export async function runInstall(
     `vsedi-${overwriteSettings ? 'install' : 'update'}-${Date.now()}.zip`,
   );
 
+  installLog.info(
+    `Starting ${overwriteSettings ? 'installation' : 'update'} in "${destFolder}" (backupAndCleanSectors=${backupAndCleanSectors}).`,
+  );
+
   try {
     // 1. Fetch release metadata
     send({ stage: 'fetching', percent: 0 });
+    installLog.info('Fetching latest release from GitHub...');
     const raw = await get(GITHUB_API);
     const release = JSON.parse(raw.toString()) as {
       assets: { name: string; browser_download_url: string }[];
@@ -574,6 +644,7 @@ export async function runInstall(
 
     // 2. Download
     send({ stage: 'downloading', percent: 0 });
+    installLog.info(`Downloading "${assetName}"...`);
     await downloadWithProgress(asset.browser_download_url, tmpPath, (pct) => {
       send({ stage: 'downloading', percent: pct });
     });
@@ -582,17 +653,22 @@ export async function runInstall(
     // the backup captures the pre-update state)
     if (backupAndCleanSectors) {
       send({ stage: 'backup', percent: 0 });
+      installLog.info('Running backup and cleaning stale sector files...');
       await backupAndCleanSectorsFolder(destFolder);
       send({ stage: 'backup', percent: 100 });
     }
 
     // 4. Extract (retries elevated via UAC if destination is write-protected)
     send({ stage: 'extracting', percent: 0 });
+    installLog.info(`Extracting package to "${destFolder}"...`);
     await extractZip(tmpPath, destFolder);
 
     // 5. Patch .prf files with user credentials (retries elevated on EACCES/EPERM)
+    installLog.info('Applying credentials to .prf files...');
     await patchPrfFiles(destFolder, name, cid, password, rank, hoppieCode);
+    installLog.info('Writing Hoppie configuration...');
     await createHoppieFiles(destFolder, hoppieCode);
+    installLog.info(`Adjusting font size (${fontSize})...`);
     await patchSymbologyFontSize(destFolder, fontSize);
 
     // 6. Cleanup
@@ -614,14 +690,26 @@ export async function runInstall(
       overwriteSettings,
     });
 
-    // 8. Install selected extras (independently, failures don't abort the rest)
-    if (payload.extras.length > 0) {
+    // 8. Install selected extras (independently, failures don't abort the rest).
+    // Mandatory extras are force-included here regardless of what the renderer
+    // sent, so they always get installed even if the UI state was stale/wrong.
+    const mandatoryExtraIds = EXTRAS.filter((e) => e.mandatory).map(
+      (e) => e.id,
+    );
+    const extrasToInstall = Array.from(
+      new Set([...payload.extras, ...mandatoryExtraIds]),
+    );
+    if (extrasToInstall.length > 0) {
       send({ stage: 'extras', percent: 0 });
-      for (const extraId of payload.extras) {
+      installLog.info(
+        `Installing ${extrasToInstall.length} extra(s): ${extrasToInstall.join(', ')}`,
+      );
+      for (const extraId of extrasToInstall) {
         const extraConfig = EXTRAS.find((e) => e.id === extraId);
         if (!extraConfig) continue;
 
         send({ stage: 'extras', percent: 0, extraId, extraStatus: 'running' });
+        installLog.info(`Starting extra "${extraConfig.name}" (${extraConfig.source})...`);
         try {
           if (extraConfig.source === 'font') {
             await installFont(extraConfig.assetPath);
@@ -658,6 +746,7 @@ export async function runInstall(
                   throw new Error(
                     `No se encontró versión estable para ${extraConfig.name}`,
                   );
+                installLog.info(`Resolved "${extraConfig.name}" latest stable release: ${stable.tag_name}.`);
                 releaseExtra = stable;
               } else {
                 const rawExtra = await get(
@@ -688,8 +777,10 @@ export async function runInstall(
               /* ignore */
             }
           }
+          installLog.info(`Extra "${extraId}" installed successfully.`);
           send({ stage: 'extras', percent: 100, extraId, extraStatus: 'done' });
         } catch (extraErr) {
+          installLog.error(`Extra "${extraId}" failed.`, (extraErr as Error).message);
           send({
             stage: 'extras',
             percent: 0,
@@ -701,9 +792,11 @@ export async function runInstall(
       }
     }
 
+    installLog.info('Installation completed successfully.');
     send({ stage: 'done', percent: 100 });
     return { success: true };
   } catch (err) {
+    installLog.error('Installation failed.', (err as Error).message);
     return { success: false, error: (err as Error).message };
   } finally {
     try { fs.unlinkSync(tmpPath); } catch { /* ignore */ }

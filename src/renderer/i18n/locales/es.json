@@ -77,14 +77,15 @@
     "overwrite_label": "Sobreescribir settings",
     "overwrite_desc": "Tu configuración actual se borrará y los sectores instalados tendrán los ajustes por defecto",
     "backup_label": "Backup y limpieza de sectores antiguos",
-    "backup_desc": "Se hará una copia .zip de tu carpeta de Euroscope (VSEDI_Backup) y se eliminarán los .prf, .sct, .ese y .rwy antiguos de LECB, LECM, GCCC y LEXX antes de instalar"
+    "backup_desc": "Se hará una copia .zip de tu carpeta de Euroscope (VSEDI_Backup) y se eliminarán los .prf, .sct, .ese y .rwy antiguos de LECB, LECM, GCCC y LEXX antes de instalar, es posible que si desmarcas esta opción los sectores aparezcan como desactualizados en Euroscope."
   },
   "extras": {
     "title": "Extras",
     "subtitle": "Selecciona las herramientas adicionales que quieras instalar junto con los sectores. Puedes omitir este paso si no necesitas ninguna.",
     "install_one": "Instalar 1 extra",
     "install_many": "Instalar {{count}} extras",
-    "continue_without": "Continuar sin extras"
+    "continue_without": "Continuar sin extras",
+    "mandatory_badge": "Obligatorio"
   },
   "progress": {
     "title_ready": "¡Listo para controlar!",
@@ -141,6 +142,8 @@
     "large": "Grande"
   },
   "extras_config": {
+    "euroscope-font_name": "Fuente Euroscope",
+    "euroscope-font_desc": "Contiene los iconos y fuentes necesarias para que Euroscope se vea correctamente.",
     "vspv_name": "Fuente VSPV",
     "vspv_desc": "Esta fuente será usada por el plugin SACTA para asemejarse lo máximo posible a los radares reales.",
     "trackaudio_name": "TrackAudio",
