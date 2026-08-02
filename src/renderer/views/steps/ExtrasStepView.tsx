@@ -14,6 +14,7 @@ export default function ExtrasStepView({
   const selected = formData.extras;
 
   const toggle = (id: string) => {
+    if (EXTRAS.find((e) => e.id === id)?.mandatory) return;
     setFormData({
       extras: selected.includes(id)
         ? selected.filter((e) => e !== id)
@@ -35,16 +36,20 @@ export default function ExtrasStepView({
       <div className="flex flex-col gap-3">
         {EXTRAS.map((extra) => {
           const isSelected = selected.includes(extra.id);
+          const isMandatory = extra.mandatory;
           return (
             <button
               key={extra.id}
               type="button"
               onClick={() => toggle(extra.id)}
+              disabled={isMandatory}
+              aria-disabled={isMandatory}
               className={[
                 'flex items-center gap-4 w-full text-left px-4 py-4 rounded-xl border transition-all',
                 isSelected
                   ? 'bg-zinc-700/60 border-zinc-500 ring-1 ring-zinc-500/30'
                   : 'bg-zinc-800/50 border-zinc-700 hover:border-zinc-600 hover:bg-zinc-800',
+                isMandatory ? 'cursor-not-allowed' : '',
               ].join(' ')}
             >
               <span
@@ -66,6 +71,11 @@ export default function ExtrasStepView({
                   {extra.version && (
                     <span className="px-1.5 py-0.5 text-xs rounded bg-zinc-700 text-zinc-400 font-mono">
                       {t(`extras_config.${extra.id}_version`)}
+                    </span>
+                  )}
+                  {isMandatory && (
+                    <span className="px-1.5 py-0.5 text-xs rounded bg-emerald-900/60 text-emerald-400 font-medium">
+                      {t('extras.mandatory_badge')}
                     </span>
                   )}
                 </div>

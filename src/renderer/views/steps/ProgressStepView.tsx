@@ -184,7 +184,7 @@ export default function ProgressStepView({
                 !extraStatus && status === 'extras'
                   ? false
                   : !isComplete && !isActive && !isError;
-              const needsUserInteraction = isActive && extra.source !== 'font';
+              const needsUserInteraction = isActive;
 
               return (
                 <li

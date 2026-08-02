@@ -5,6 +5,7 @@ type ExtraBase = {
   version?: string;
   /** Registry DisplayName used to detect if already installed */
   detectionName?: string;
+  mandatory?: boolean;
 };
 
 export type ExtraConfig =
@@ -31,6 +32,15 @@ export type ExtraConfig =
     });
 
 export const EXTRAS: ExtraConfig[] = [
+  {
+    id: 'euroscope-font',
+    name: 'Fuente Euroscope',
+    description:
+      'Contiene los iconos y fuentes necesarias para que Euroscope se vea correctamente.',
+    source: 'font',
+    assetPath: 'extras/euroscope.ttf',
+    mandatory: true,
+  },
   {
     id: 'vspv',
     name: 'Fuente VSPV',
