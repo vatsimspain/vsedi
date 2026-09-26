@@ -45,6 +45,8 @@ function overallProgress(
   return 0;
 }
 
+let installStartedThisSession = false;
+
 export default function ProgressStepView({
   formData,
   onBack,
@@ -56,6 +58,7 @@ export default function ProgressStepView({
   const done = status === 'done';
   const hasError = status === 'error';
   const [euroscopeBlocked, setEuroscopeBlocked] = useState(false);
+  const [repeatConfirm, setRepeatConfirm] = useState(installStartedThisSession);
 
   const selectedExtras = EXTRAS.filter((e) => formData.extras.includes(e.id));
   const hasBackup = formData.backupAndCleanSectors;
@@ -66,6 +69,7 @@ export default function ProgressStepView({
   }, [hasBackup]);
 
   const startInstall = useCallback(() => {
+    installStartedThisSession = true;
     install({
       overwriteSettings: formData.overwriteSettings,
       backupAndCleanSectors: formData.backupAndCleanSectors,
@@ -103,6 +107,7 @@ export default function ProgressStepView({
   }, [startInstall]);
 
   useEffect(() => {
+    if (installStartedThisSession) return undefined;
     let pollTimer: ReturnType<typeof setInterval> | null = null;
 
     (async () => {
@@ -122,6 +127,11 @@ export default function ProgressStepView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const handleReinstall = () => {
+    setRepeatConfirm(false);
+    checkEuroscopeAndInstall();
+  };
+
   const doneExtras = Object.values(extrasProgress).filter(
     (s) => s === 'done' || s === 'error',
   ).length;
@@ -138,6 +148,49 @@ export default function ProgressStepView({
     status === 'done' || status === 'extras'
       ? tasks.length
       : Math.max(stageIndex, 0);
+
+  if (repeatConfirm && status === 'idle') {
+    return (
+      <div className="flex flex-col gap-6">
+        <div>
+          <h2 className="text-xl font-semibold font-akira text-slate-100">
+            {t('progress.repeat_title')}
+          </h2>
+          <p className="mt-1 text-sm text-slate-400">
+            {t('progress.repeat_message')}
+          </p>
+        </div>
+        <div className="flex items-center justify-between pt-1">
+          <button
+            type="button"
+            onClick={onBack}
+            className="flex items-center gap-2 px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-900 text-white text-sm font-medium rounded-lg transition-colors"
+          >
+            <ArrowRightIcon className="w-4 h-4 rotate-180" />
+            {t('nav.back')}
+          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleReinstall}
+              className="flex items-center gap-2 px-5 py-2.5 bg-zinc-700 hover:bg-zinc-600 active:bg-zinc-800 text-white text-sm font-medium rounded-lg transition-colors"
+            >
+              <RefreshIcon className="w-4 h-4" />
+              {t('progress.repeat_reinstall')}
+            </button>
+            <button
+              type="button"
+              onClick={onNext}
+              className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors"
+            >
+              {t('nav.continue')}
+              <ArrowRightIcon className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6">

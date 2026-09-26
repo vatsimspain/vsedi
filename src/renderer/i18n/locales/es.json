@@ -110,7 +110,10 @@
     "euroscope_running_title": "EuroScope está abierto",
     "euroscope_running_message": "Cierra EuroScope antes de continuar. Si sigue abierto, la instalación de los sectores puede fallar o dejar archivos corruptos.",
     "euroscope_running_waiting": "Esperando a que cierres EuroScope...",
-    "euroscope_running_retry": "Reintentar"
+    "euroscope_running_retry": "Reintentar",
+    "repeat_title": "Instalación ya ejecutada",
+    "repeat_message": "La instalación ya se ejecutó en esta sesión. No se repetirá sola: pulsa Reinstalar para ejecutarla de nuevo o Continuar para seguir.",
+    "repeat_reinstall": "Reinstalar"
   },
   "final": {
     "title": "¡Todo listo!",

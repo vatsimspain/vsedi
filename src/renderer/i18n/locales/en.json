@@ -109,7 +109,10 @@
     "euroscope_running_title": "EuroScope is running",
     "euroscope_running_message": "Close EuroScope before continuing. If it stays open, installing the sectors may fail or leave corrupted files.",
     "euroscope_running_waiting": "Waiting for you to close EuroScope...",
-    "euroscope_running_retry": "Retry"
+    "euroscope_running_retry": "Retry",
+    "repeat_title": "Installation already run",
+    "repeat_message": "The installation already ran in this session. It will not run again on its own: press Reinstall to run it again or Continue to carry on.",
+    "repeat_reinstall": "Reinstall"
   },
   "final": {
     "title": "All done!",
