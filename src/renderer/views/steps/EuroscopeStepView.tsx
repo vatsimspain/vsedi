@@ -98,7 +98,10 @@ export default function EuroscopeStepView({ onNext, onBack }: StepProps) {
     setPhase('downloading');
     const result = await window.electron.euroscope.installMsi(url);
     if (result.success) {
-      setPhase('pick');
+      const info = await window.electron.euroscope.getInfo();
+      setExePath(info.exePath);
+      setVersion(info.version);
+      setPhase(info.installed ? 'found' : 'pick');
     } else {
       setErrorMsg(result.error ?? t('euroscope.error_unknown'));
       setPhase('error');

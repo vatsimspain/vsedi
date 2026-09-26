@@ -4,6 +4,7 @@ import type { StepProps, WizardStep } from '../models/wizard.types';
 import StepIndicator from '../components/StepIndicator.component';
 import UpdateBanner from '../components/UpdateBanner.component';
 import OpenSourceBanner from '../components/OpenSourceBanner.component';
+import AdminBanner from '../components/AdminBanner.component';
 import LanguageToggle from '../components/LanguageToggle.component';
 import WhiteLogo from '../../../assets/logo/WhiteLogo.png';
 import WhiteLogoAlt from '../../../assets/logo/WhiteLogoAlt.png';
@@ -62,6 +63,7 @@ export default function WizardView({ steps, currentStep, stepProps }: Props) {
       <OpenSourceBanner />
       <div className="absolute inset-0 bg-black/70" />
       <div className="relative flex flex-col flex-1 overflow-hidden">
+        <AdminBanner />
         <div className="flex items-center justify-between flex-shrink-0 px-8 py-5 box-shadow-lg shadow-black/30">
           <img
             src={

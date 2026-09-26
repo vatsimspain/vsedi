@@ -44,6 +44,7 @@ const electronHandler = {
   },
   app: {
     close: () => ipcRenderer.send('app:close'),
+    isAdmin: (): Promise<boolean> => ipcRenderer.invoke('app:isAdmin'),
   },
   update: {
     onAvailable: (func: (info: unknown) => void) =>

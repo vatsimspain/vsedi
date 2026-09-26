@@ -127,6 +127,10 @@
     "error": "Error en la actualización: {{message}}",
     "restart": "Reiniciar ahora"
   },
+  "admin": {
+    "warning": "VSEDI no se está ejecutando como administrador. Es posible que algunas funciones (instalación de sectores, EuroScope o plugins) no funcionen correctamente. Cierra la aplicación y ábrela con \"Ejecutar como administrador\".",
+    "dismiss": "Cerrar aviso"
+  },
   "opensource": {
     "text_pre": "VSEDI es",
     "link_label": "código abierto",

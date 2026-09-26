@@ -10,7 +10,7 @@
  */
 import path from 'path';
 import fs from 'fs';
-import { exec, execSync } from 'child_process';
+import { execSync, spawn } from 'child_process';
 import { app, BrowserWindow, shell, ipcMain, dialog } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
@@ -65,6 +65,19 @@ ipcMain.handle('install:run', runInstall);
 ipcMain.handle('config:load', loadConfig);
 ipcMain.handle('config:save', saveConfig);
 ipcMain.handle('airac:scan', scanInstalledAiracs);
+
+function isRunningAsAdmin(): boolean {
+  if (process.platform !== 'win32') return true;
+  try {
+    // `net session` only succeeds from an elevated process
+    execSync('net session', { stdio: 'ignore', windowsHide: true });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+ipcMain.handle('app:isAdmin', () => isRunningAsAdmin());
 
 ipcMain.on('app:close', () => {
   mainWindow?.close();
@@ -139,7 +152,11 @@ ipcMain.handle('euroscope:browse', async () => {
 
 ipcMain.on('euroscope:launch', () => {
   const exePath = findEuroscopeInfo().exePath ?? EUROSCOPE_FALLBACK;
-  exec(`"${exePath}"`);
+  if (path.basename(exePath).toLowerCase() !== 'euroscope.exe') return;
+  if (!fs.existsSync(exePath)) return;
+  const child = spawn(exePath, [], { detached: true, stdio: 'ignore' });
+  child.on('error', () => {});
+  child.unref();
 });
 
 ipcMain.handle('http:getText', async (_event, url: string) => {
@@ -242,22 +259,35 @@ const createWindow = async () => {
  * Add event listeners...
  */
 
-app.on('window-all-closed', () => {
-  // Respect the OSX convention of having the application in memory even
-  // after all windows have been closed
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
-});
+const gotTheLock = app.requestSingleInstanceLock();
 
-app
-  .whenReady()
-  .then(() => {
-    createWindow();
-    app.on('activate', () => {
-      // On macOS it's common to re-create a window in the app when the
-      // dock icon is clicked and there are no other windows open.
-      if (mainWindow === null) createWindow();
-    });
-  })
-  .catch(console.log);
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+    }
+  });
+
+  app.on('window-all-closed', () => {
+    // Respect the OSX convention of having the application in memory even
+    // after all windows have been closed
+    if (process.platform !== 'darwin') {
+      app.quit();
+    }
+  });
+
+  app
+    .whenReady()
+    .then(() => {
+      createWindow();
+      app.on('activate', () => {
+        // On macOS it's common to re-create a window in the app when the
+        // dock icon is clicked and there are no other windows open.
+        if (mainWindow === null) createWindow();
+      });
+    })
+    .catch(console.log);
+}

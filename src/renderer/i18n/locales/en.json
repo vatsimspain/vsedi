@@ -67,12 +67,13 @@
     "name": "Network name",
     "name_placeholder": "e.g. John Doe",
     "hoppie": "Hoppie Code",
-    "hoppie_placeholder": "Ej. t76MKHBavE2r44c",
+    "hoppie_placeholder": "E.g. t76MKHBavE2r44c",
     "rank": "Rating",
     "font_size": "Font size",
     "sectors_folder": "EuroScope sectors folder",
     "sectors_placeholder": "Select the sectors folder...",
    "sectors_desc": "This folder contains the EuroScope sector files. By default, it is located at C:\\Users\\[user]\\AppData\\Roaming\\EuroScope. You can use the default location or choose a different folder where you want to install the files. When starting EuroScope, you will need to open the .prf file from this folder.",
+    "browse": "Browse",
     "update_only_label": "Update only (keep current settings)",
     "update_only_desc": "Installs the lightweight update package instead of a full install. Your current EuroScope settings will be kept, but some files won't be updated.",
     "update_warning_title": "Some files won't be updated",
@@ -125,6 +126,10 @@
     "downloaded": "Update ready{{version}}, restart to apply it",
     "error": "Update error: {{message}}",
     "restart": "Restart now"
+  },
+  "admin": {
+    "warning": "VSEDI is not running as administrator. Some features (installing sectors, EuroScope or plugins) might not work properly. Close the app and reopen it with \"Run as administrator\".",
+    "dismiss": "Dismiss warning"
   },
   "opensource": {
     "text_pre": "VSEDI is",

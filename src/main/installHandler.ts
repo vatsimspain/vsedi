@@ -98,6 +98,15 @@ function writeConfig(data: Partial<SavedConfig>): void {
   );
 }
 
+function getDefaultEuroscopeExePath(): string | null {
+  const bases = [process.env['ProgramFiles(x86)'], process.env.ProgramFiles];
+  const found = bases
+    .filter((base): base is string => !!base)
+    .map((base) => path.join(base, 'EuroScope', 'EuroScope.exe'))
+    .find((candidate) => fs.existsSync(candidate));
+  return found ?? null;
+}
+
 export function loadConfig(_event: IpcMainInvokeEvent): SavedConfig {
   return readConfig();
 }
@@ -569,6 +578,12 @@ async function patchPrfFiles(
   rank: string,
   hoppieCode: string,
 ): Promise<void> {
+  // Without both credentials there's nothing meaningful to inject, so leave
+  // the .prf files exactly as they shipped instead of writing empty values.
+  if (!cid.trim() || !password.trim()) {
+    installLog.info('CID or password empty, skipping .prf patching.');
+    return;
+  }
   const prfFiles = findPrfFiles(folder);
   installLog.info(`Found ${prfFiles.length} .prf file(s) to patch.`);
   const rating = RATING_MAP[rank] ?? 1;
@@ -598,6 +613,7 @@ async function createHoppieFiles(
   folder: string,
   hoppieCode: string,
 ): Promise<void> {
+  if (!hoppieCode) return;
   for (const sector of HOPPIE_SECTORS) {
     const dir = path.join(folder, sector, 'Plugins', 'TopSky');
     await mkdirSafe(dir);
@@ -637,6 +653,8 @@ export async function installEuroscopeMsi(
       proc.on('error', reject);
     });
     installLog.info('EuroScope installation completed.');
+    const detected = getDefaultEuroscopeExePath();
+    if (detected) writeConfig({ euroscopePath: detected });
     return { success: true };
   } catch (err) {
     installLog.error('EuroScope installation failed.', (err as Error).message);
@@ -713,6 +731,22 @@ export async function runInstall(
   if (isEuroscopeRunning()) {
     const msg =
       'EuroScope está abierto. Ciérralo antes de instalar los sectores para evitar errores o archivos corruptos.';
+    installLog.warn(msg);
+    return { success: false, error: msg };
+  }
+
+  let destIsDirectory = false;
+  try {
+    destIsDirectory =
+      !!destFolder &&
+      path.isAbsolute(destFolder) &&
+      fs.statSync(destFolder).isDirectory();
+  } catch {
+    destIsDirectory = false;
+  }
+  if (!destIsDirectory) {
+    const msg =
+      'La carpeta de sectores no es válida. Selecciona una carpeta existente antes de instalar.';
     installLog.warn(msg);
     return { success: false, error: msg };
   }

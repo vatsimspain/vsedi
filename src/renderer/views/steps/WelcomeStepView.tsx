@@ -17,6 +17,16 @@ function parseEntry(line: string): AiracEntry | null {
   return { fir: match[1].trim(), date: match[2] };
 }
 
+function latestEntry(
+  entries: InstalledEntry[] | undefined,
+): InstalledEntry | undefined {
+  return entries?.reduce<InstalledEntry | undefined>(
+    (best, entry) =>
+      best === undefined || entry.date > best.date ? entry : best,
+    undefined,
+  );
+}
+
 const FIR_PLACEHOLDERS = ['GCCC', 'LECB', 'LECM'];
 
 export default function WelcomeStepView({ onNext }: StepProps) {
@@ -96,7 +106,7 @@ export default function WelcomeStepView({ onNext }: StepProps) {
             : airacError
               ? FIR_PLACEHOLDERS.map((fir) => {
                   const entries = installedAiracs[fir];
-                  const latest = entries?.[entries.length - 1];
+                  const latest = latestEntry(entries);
                   return (
                     <StatusCard
                       key={fir}
@@ -109,7 +119,7 @@ export default function WelcomeStepView({ onNext }: StepProps) {
               : githubAiracs!.map((entry) => {
                   const entries = installedAiracs[entry.fir];
                   const matched = entries?.find((e) => e.date === entry.date);
-                  const latest = entries?.[entries.length - 1];
+                  const latest = latestEntry(entries);
                   const status = matched ? 'ok' : latest ? 'warn' : 'error';
                   const value = matched
                     ? `AIRAC ${matched.cycle}`
