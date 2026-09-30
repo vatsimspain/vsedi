@@ -19,6 +19,9 @@ import type {
 const GITHUB_API =
   'https://api.github.com/repos/vatsimspain/Operaciones/releases/tags/vsedi';
 
+const REQUEST_TIMEOUT_MS = 30000;
+const DOWNLOAD_IDLE_TIMEOUT_MS = 60000;
+
 // Hidden BETA channel: same release as the public one, just an extra asset
 // ("beta_install.zip.enc") sitting alongside data_install.zip/data_update.zip,
 // encrypted with AES-256-GCM (see scripts/encrypt-beta-package.js). The
@@ -121,8 +124,10 @@ export function saveConfig(
 export function get(url: string): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const mod = url.startsWith('https') ? https : http;
-    mod
-      .get(url, { headers: { 'User-Agent': 'vsedi-installer' } }, (res) => {
+    const req = mod.get(
+      url,
+      { headers: { 'User-Agent': 'vsedi-installer' } },
+      (res) => {
         if (
           res.statusCode &&
           res.statusCode >= 300 &&
@@ -143,8 +148,16 @@ export function get(url: string): Promise<Buffer> {
         res.on('data', (c: Buffer) => chunks.push(c));
         res.on('end', () => resolve(Buffer.concat(chunks)));
         res.on('error', reject);
-      })
-      .on('error', reject);
+      },
+    );
+    req.setTimeout(REQUEST_TIMEOUT_MS, () => {
+      req.destroy(
+        new Error(
+          'La petición tardó demasiado en responder. Comprueba tu conexión a internet.',
+        ),
+      );
+    });
+    req.on('error', reject);
   });
 }
 
@@ -170,20 +183,33 @@ export function downloadWithProgress(
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     const mod = url.startsWith('https') ? https : http;
-    mod
-      .get(url, { headers: { 'User-Agent': 'vsedi-installer' } }, (res) => {
+    let idleTimer: ReturnType<typeof setTimeout> | null = null;
+    const clearIdleTimer = () => {
+      if (idleTimer) clearTimeout(idleTimer);
+      idleTimer = null;
+    };
+    const armIdleTimer = (onTimeout: () => void): void => {
+      clearIdleTimer();
+      idleTimer = setTimeout(onTimeout, DOWNLOAD_IDLE_TIMEOUT_MS);
+    };
+    const req = mod.get(
+      url,
+      { headers: { 'User-Agent': 'vsedi-installer' } },
+      (res) => {
         if (
           res.statusCode &&
           res.statusCode >= 300 &&
           res.statusCode < 400 &&
           res.headers.location
         ) {
+          clearIdleTimer();
           return resolve(
             downloadWithProgress(res.headers.location, dest, onProgress),
           );
         }
         if (!res.statusCode || res.statusCode < 200 || res.statusCode >= 300) {
           res.resume();
+          clearIdleTimer();
           return reject(
             new Error(
               `Descarga fallida: servidor devolvió HTTP ${res.statusCode ?? 'desconocido'}`,
@@ -197,12 +223,26 @@ export function downloadWithProgress(
           file = fs.createWriteStream(dest);
         } catch (err) {
           res.resume();
+          clearIdleTimer();
           return reject(err);
         }
         let errored = false;
+        const onIdleTimeout = () => {
+          if (!errored) {
+            errored = true;
+            file.destroy();
+            reject(
+              new Error(
+                'La descarga se interrumpió por inactividad en la red. Comprueba tu conexión e inténtalo de nuevo.',
+              ),
+            );
+          }
+        };
+        armIdleTimer(onIdleTimeout);
         res.on('data', (chunk: Buffer) => {
           received += chunk.length;
           if (total > 0) onProgress(Math.round((received / total) * 100));
+          armIdleTimer(onIdleTimeout);
           file.write(chunk, (writeErr) => {
             if (writeErr && !errored) {
               errored = true;
@@ -212,17 +252,23 @@ export function downloadWithProgress(
           });
         });
         res.on('end', () => {
+          clearIdleTimer();
           if (!errored) file.end(() => resolve());
         });
         res.on('error', (err) => {
+          clearIdleTimer();
           if (!errored) {
             errored = true;
             file.destroy();
             reject(err);
           }
         });
-      })
-      .on('error', reject);
+      },
+    );
+    req.on('error', (err) => {
+      clearIdleTimer();
+      reject(err);
+    });
   });
 }
 

@@ -102,6 +102,18 @@ export default function ProgressStepView({
     return running;
   }, [startInstall]);
 
+  const installing =
+    status !== 'idle' && status !== 'done' && status !== 'error';
+
+  useEffect(() => {
+    if (!installing) return undefined;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [installing]);
+
   useEffect(() => {
     let pollTimer: ReturnType<typeof setInterval> | null = null;
 
